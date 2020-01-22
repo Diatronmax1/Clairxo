@@ -38,30 +38,34 @@ class GameModel():
     def goOffline(self):
         print('Going offline')
         if os.path.exists(self.serverLink):
-            players = ''
+            players = []
             with open(self.serverLink, 'r') as slink:
                 for line in slink:
                     if line != self.user:
-                        players += line + '\n'
+                        players.append(line)
             with open(self.serverLink, 'w') as slink:
-                slink.write(players)
+                for player in players:
+                    slink.write(player)
+        else:
+            print('Didn\'t connect to server to close')
 
     def connect(self):
         if os.path.exists(self.serverLink):
             print('Connected to server')
-            players = ''
+            players = []
             online = False
             with open(self.serverLink, 'r') as slink:
                 for line in slink:
                     print('Online Player ' + line)
-                    players += line + '\n'
+                    players.append(line)
                     if line == self.user:
                         online = True
             if not online:
                 print('Setting status to online')
                 players += self.user
                 with open(self.serverLink, 'w') as slink:
-                    slink.write(players)
+                    for player in players:
+                        slink.write(player)
         else:
             print('Did not connect to server!')
 
