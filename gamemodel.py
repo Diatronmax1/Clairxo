@@ -42,7 +42,7 @@ class GameModel():
             with open(self.serverLink, 'r') as slink:
                 for line in slink:
                     if line != self.user:
-                        players += line
+                        players += line + '\n'
             with open(self.serverLink, 'w') as slink:
                 slink.write(players)
 
@@ -54,7 +54,7 @@ class GameModel():
             with open(self.serverLink, 'r') as slink:
                 for line in slink:
                     print('Online Player ' + line)
-                    players += line
+                    players += line + '\n'
                     if line == self.user:
                         online = True
             if not online:
