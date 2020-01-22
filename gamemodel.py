@@ -32,7 +32,7 @@ class GameModel():
         self.goOffline()
         self.user = newname
         with open(self.cfgfile, 'w') as cfile:
-            cfile.write(newname)
+            cfile.write(newname + '\n')
         self.connect()
 
     def goOffline(self):
