@@ -4,18 +4,19 @@ from PyQt5.QtCore import QThread, QObject
 from PyQt5.QtWidgets import (QMainWindow, QAction, QApplication, qApp, QLabel, QFileDialog,
                              QTabWidget, QWidget)
 import sys
-from panel import Panel
-from gamemodel import GameModel
+from panel import HomeScreen
+from client import Client
 
 class Clairxo(QMainWindow):
     
     def __init__(self, size):
         super().__init__()
-        self.gamemodel = GameModel()
-        self.mainwindow = Panel(self.gamemodel, self.statusBar(), self)
+        self.client = Client()
+        self.mainwindow = HomeScreen(self.client, self.statusBar(), self)
+        self.mainwindow.initialize()
         self.setCentralWidget(self.mainwindow)
         self.setWindowTitle('CLAIRXO')
-        self.setGeometry(300, 300, 300, 150)
+        self.setGeometry(650, 200, 600, 600)
         self.show()
         
 if __name__ == '__main__':
@@ -28,4 +29,4 @@ if __name__ == '__main__':
     except:
         pass
     finally:
-        ex.gamemodel.goOffline()
+        ex.client.goOffline()

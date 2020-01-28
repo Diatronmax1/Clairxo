@@ -1,4 +1,6 @@
 import os
+from lib.cfg import CFGFile
+import pickle
 
 class Point():
     def __init__(self, x, y):
@@ -14,26 +16,54 @@ class Point():
         print(self.y)
         return (self.x*7) + self.y
 
-class GameModel():
+class Client():
     def __init__(self):
-        self.cfgfile = 'cfg.txt'
+        self.cfgfile = 'lib/cfg/cfg.tp'
+        self.config = None
         self.serverLink = '//azmain/data/Transfer/LambertC/QuixoServer/users.txt'
+        self.gameFolder = '//azmain/data/Transfer/LambertC/QuixoServer/games/'
         self.user = ''
         self.states = ['X', 'Y']
         self.currentState = self.states[0]
         self.dropPoints = []
         self.turns = 0
-        self.load()
+
+    def load(self):
+        self.user = ''
+        if not os.path.exists(self.cfgfile):
+            self.config = CFGFile(self.cfgfile)
+            with open(self.cfgfile, 'wb') as cfile:
+                pickle.dump(self.config, cfile)
+        else:
+            with open(self.cfgfile, 'rb') as cfile:
+                self.config = pickle.load(cfile)
+                self.user = self.config.getName()
+        return self.user
+
+    def startNewGame(self):
+        pass
 
     def checkUserName(self):
         return self.user
 
     def setUserName(self, newname):
         self.goOffline()
-        self.user = newname
-        with open(self.cfgfile, 'w') as cfile:
-            cfile.write(newname + '\n')
+        self.config.setName(newname)
+        self.user = self.config.getName()
         self.connect()
+
+    def getOnlinePlayers(self):
+        print('Scanning for online players')
+        players = []
+        if os.path.exists(self.serverLink):
+            with open(self.serverLink, 'r') as slink:
+                for line in slink:
+                    if line != self.user:
+                        players.append(line)
+        else:
+            print('Didnt\'t connect to server to find players')
+        return players
+
 
     def goOffline(self):
         print('Going offline')
@@ -68,13 +98,6 @@ class GameModel():
                         slink.write(player)
         else:
             print('Did not connect to server!')
-
-    def load(self):
-        if not os.path.exists(self.cfgfile):
-            open(self.cfgfile, 'a').close()
-        with open(self.cfgfile, 'r') as cfgfile:
-            self.user = cfgfile.readline()
-        self.connect()
 
     def reset(self):
         self.currentState = self.states[0]
