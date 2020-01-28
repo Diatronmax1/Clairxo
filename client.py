@@ -30,6 +30,8 @@ class Client():
 
     def load(self):
         self.user = ''
+        if not os.path.exists(os.path.dirname(self.cfgfile)):
+            os.mkdir(os.path.dirname(self.cfgfile))
         if not os.path.exists(self.cfgfile):
             self.config = CFGFile(self.cfgfile)
             with open(self.cfgfile, 'wb') as cfile:
