@@ -6,6 +6,8 @@ class CFGFile():
         self.path = path
 
     def setName(self, newname):
+        if newname[-1] != '\n':
+            newname += '\n'
         self.name = newname
         self.save()
 
@@ -13,5 +15,5 @@ class CFGFile():
         return self.name
 
     def save(self):
-    	with open(self.path, 'wb') as cfile:
-    		pickle.dump(self, cfile)
+        with open(self.path, 'wb') as cfile:
+            pickle.dump(self, cfile)
