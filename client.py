@@ -53,7 +53,6 @@ class Client():
         self.connect()
 
     def getOnlinePlayers(self):
-        print('Scanning for online players')
         players = []
         if os.path.exists(self.serverLink):
             with open(self.serverLink, 'r') as slink:

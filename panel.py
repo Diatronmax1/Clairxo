@@ -84,9 +84,9 @@ class HomeScreen(QWidget):
             self.statusbar.showMessage('Set up user in options!')
         self.monitor = ClientMonitor(self.client)
         self.monitor.signals.notify.connect(self.refresh)
+        self.threadpool.start(self.monitor)
 
     def refresh(self):
-        self.statusbar.showMessage('Refreshed: ' + str(self.count))
         self.playerList.clear()
         self.playerList.addItems(self.client.getOnlinePlayers())
 
