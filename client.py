@@ -17,30 +17,38 @@ class Point():
         return (self.x*7) + self.y
 
 class Client():
+    '''Loads the players default settings which include
+    username and games as well as stats
+    '''
     def __init__(self):
         self.cfgfile = 'lib/cfg/cfg.tp'
         self.config = None
-        self.serverLink = '//azmain/data/Transfer/LambertC/QuixoServer/users.txt'
-        self.gameFolder = '//azmain/data/Transfer/LambertC/QuixoServer/games/'
-        self.user = ''
-        self.states = ['X', 'Y']
-        self.currentState = self.states[0]
-        self.dropPoints = []
-        self.turns = 0
+        self.load()
 
     def load(self):
-        self.user = ''
+        '''Verifies integrity of server connection and loads user
+        settings
+        '''
+        #Check if cfg directory has ever been created
         if not os.path.exists(os.path.dirname(self.cfgfile)):
             os.mkdir(os.path.dirname(self.cfgfile))
-        if not os.path.exists(self.cfgfile):
-            self.config = CFGFile(self.cfgfile)
-            with open(self.cfgfile, 'wb') as cfile:
-                pickle.dump(self.config, cfile)
+        #Check if there is already a config saved
+        if os.path.exists(self.cfgfile):
+            #Try to load the config. If there have been
+            #changes this might fail.
+            try:
+                with open(self.cfgfile, 'rb') as cfile:
+                    self.config = pickle.load(cfile)
+            except:
+                #If this failes make a new config file
+                #Config saves automatically on creation
+                self.config = CFGFile(self.cfgfile) 
         else:
-            with open(self.cfgfile, 'rb') as cfile:
-                self.config = pickle.load(cfile)
-                self.user = self.config.getName()
-        return self.user
+            #Create a new config, saves automatically
+            self.config = CFGFile(self.cfgfile)
+        #Now that the config file has been loaded in the 
+        #remaining functions are guranteed to have a self.config
+        #available.
 
     def startNewGame(self):
         pass
@@ -54,47 +62,60 @@ class Client():
         self.user = self.config.getName()
         self.connect()
 
+    def getUserName(self):
+        return self.config.getName()
+
     def getOnlinePlayers(self):
         players = []
-        if os.path.exists(self.serverLink):
-            with open(self.serverLink, 'r') as slink:
+        sp = self.config.getServerPath()
+        name = self.config.getName()
+        if os.path.exists(sp):
+            with open(sp, 'r') as slink:
                 for line in slink:
-                    if line != self.user:
+                    if line != name:
                         players.append(line)
         else:
             print('Didnt\'t connect to server to find players')
         return players
 
-
     def goOffline(self):
         print('Going offline')
-        if os.path.exists(self.serverLink):
+        sp = self.config.getServerPath()
+        name = self.config.getName()
+        if name == '':
+            print('No username so dont disconnect')
+            return
+        if os.path.exists(sp):
             players = []
-            with open(self.serverLink, 'r') as slink:
+            with open(sp, 'r') as slink:
                 for line in slink:
-                    if line != self.user:
+                    if line != name:
                         players.append(line)
-            with open(self.serverLink, 'w') as slink:
+            with open(sp, 'w') as slink:
                 for player in players:
                     slink.write(player)
         else:
             print('Didn\'t connect to server to close')
 
     def connect(self):
-        if os.path.exists(self.serverLink):
+        sp = self.config.getServerPath()
+        name = self.config.getName()
+        if name == '':
+            print('No username set yet')
+            return
+        if os.path.exists(sp):
             print('Connected to server')
             players = []
             online = False
-            with open(self.serverLink, 'r') as slink:
+            with open(sp, 'r') as slink:
                 for line in slink:
-                    print('Online Player ' + line)
                     players.append(line)
-                    if line == self.user:
+                    if line == name:
                         online = True
             if not online:
                 print('Setting status to online')
-                players += self.user
-                with open(self.serverLink, 'w') as slink:
+                players += name
+                with open(sp, 'w') as slink:
                     for player in players:
                         slink.write(player)
         else:

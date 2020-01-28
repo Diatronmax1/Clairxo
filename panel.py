@@ -6,26 +6,11 @@ from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, Q
 import time
 import numpy as np
 
-class WorkerSignals(QObject):
-    notify = pyqtSignal()
-
-class ClientMonitor(QRunnable):
-    def __init__(self, client, *args, **kwargs):
-        super().__init__()
-        self.signals = WorkerSignals()
-        self.client = client
-        self.working = True
-
-    def run(self):
-        while self.working:
-            time.sleep(1)
-            #players = self.client.getOnlinePlayers()
-            self.signals.notify.emit()
-
 class HomeScreen(QWidget):
     def __init__(self, client, statusbar, parent):
         super().__init__(parent)
         self.threadpool = QThreadPool()
+        #Client comes in loaded with a config
         self.client = client
         self.statusbar = statusbar
         background = 'lib/images/background.jpg'
@@ -39,6 +24,11 @@ class HomeScreen(QWidget):
         label.setStyleSheet('background-color:white')
         self.userName = QLabel()
         self.userName.setStyleSheet('background-color:white')
+        name = self.client.getUserName()
+        if name:
+            self.userName.setText(name)
+        else:
+            self.statusbar.showMessage('Set User in the options')
         userBox = QWidget()
         layout = QHBoxLayout(userBox)
         layout.addWidget(label)
@@ -69,26 +59,12 @@ class HomeScreen(QWidget):
         layout.addWidget(label,                         5, 1)
         layout.addWidget(self.playerList,               6, 1)
         layout.addWidget(QLabel('\t'),                  7, 0, 1, 3)
-        self.count = 0
-
-    def initialize(self):
-        print('Loading Client from Panel')
-        username = self.client.load()
-        if username:
-            self.userName.setText(username)
-            print('Connecting to Server')
-            self.client.connect()
-        else:
-            print('No username set up yet')
-            self.userName.setText('Unknown!')
-            self.statusbar.showMessage('Set up user in options!')
-        self.monitor = ClientMonitor(self.client)
-        self.monitor.signals.notify.connect(self.refresh)
-        self.threadpool.start(self.monitor)
-
+        
     def refresh(self):
         self.playerList.clear()
-        self.playerList.addItems(self.client.getOnlinePlayers())
+        players = self.client.getOnlinePlayers()
+        for player in players:
+            self.playerList.addItem(player[:-1])
 
     def resizeEvent(self, event):
         newmap = self.image.scaled(self.width(), self.height())
