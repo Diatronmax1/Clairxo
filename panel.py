@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject
+from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject, QThreadPool, QRunnable
 from PyQt5.QtGui import QDrag, QPixmap, QPalette, QBrush
 from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, QInputDialog, 
                              QLabel, QListWidget, QListWidgetItem, QLineEdit, QPushButton, QProgressBar, 
@@ -6,9 +6,26 @@ from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, Q
 import time
 import numpy as np
 
+class WorkerSignals(QObject):
+    notify = pyqtSignal()
+
+class ClientMonitor(QRunnable):
+    def __init__(self, client, *args, **kwargs):
+        super().__init__()
+        self.signals = WorkerSignals()
+        self.client = client
+        self.working = True
+
+    def run(self):
+        while self.working:
+            time.sleep(1)
+            #players = self.client.getOnlinePlayers()
+            self.signals.notify.emit()
+
 class HomeScreen(QWidget):
     def __init__(self, client, statusbar, parent):
         super().__init__(parent)
+        self.threadpool = QThreadPool()
         self.client = client
         self.statusbar = statusbar
         background = 'lib/images/background.jpg'
@@ -52,6 +69,7 @@ class HomeScreen(QWidget):
         layout.addWidget(label,                         5, 1)
         layout.addWidget(self.playerList,               6, 1)
         layout.addWidget(QLabel('\t'),                  7, 0, 1, 3)
+        self.count = 0
 
     def initialize(self):
         print('Loading Client from Panel')
@@ -64,8 +82,11 @@ class HomeScreen(QWidget):
             print('No username set up yet')
             self.userName.setText('Unknown!')
             self.statusbar.showMessage('Set up user in options!')
+        self.monitor = ClientMonitor(self.client)
+        self.monitor.signals.notify.connect(self.refresh)
 
     def refresh(self):
+        self.statusbar.showMessage('Refreshed: ' + str(self.count))
         self.playerList.clear()
         self.playerList.addItems(self.client.getOnlinePlayers())
 
