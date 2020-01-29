@@ -74,7 +74,7 @@ class Clairxo(QMainWindow):
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
         self.setWindowTitle('CLAIRXO')
-        self.setGeometry(650, 200, 600, 600)
+        self.setGeometry(650, 100, 700, 700)
         self.show()
 
     def createHomePanel(self):
@@ -127,6 +127,7 @@ class Clairxo(QMainWindow):
         #Create all the panel widgets again and reconnect the signals
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
+        self.setGeometry(650, 100, 700, 700)
         #Delete all the old game information
         self.gamemodel = None
         self.gameWidget = None

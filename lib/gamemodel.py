@@ -21,14 +21,22 @@ class Cube():
     def revertState(self):
         self.state = self.oldstate
 
+    def getPos(self):
+        return self.x, self.y
+
     def clear(self):
         self.state = None
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.state == other.state
 
     def __str__(self):
         return str(self.x) + ', ' + str(self.y) + ' State: ' +  str(self.state)
 
 class GameModel():
-    def __init__(self, client):
+    def __init__(self, client, player1, player2):
+        self.players = [player1, player2]
+        self.currentPlayer = self.players[0]
         self.client = client
         time = dt.datetime.now()
         self.filename = time.strftime("%d%m%Y") + self.client.getUserName()[:-1] + self.client.getPlayerTarget()[:-1]
@@ -50,6 +58,12 @@ class GameModel():
         self.pickedUpCube = None
         self.save()
 
+    def getCurrentPlayer(self):
+        return self.currentPlayer
+
+    def getState(self):
+        return self.state
+
     def getDropPoints(self):
         return self.dropPoints
 
@@ -60,10 +74,12 @@ class GameModel():
                 if cube:
                     cube.clear()
         self.state = self.states[0]
+        self.droppedPoint = None
+        self.pickedUpCube = None
         self.turnCount = 0
         self.save()
 
-    def acceptDrop(self, x, y):
+    def setQueueDrop(self, x, y):
         self.droppedPoint = (x, y)
 
     def rejectDrop(self):
@@ -120,8 +136,13 @@ class GameModel():
             for col in range(2, 7):
                 cube = self.cubes[row][col]
                 self.cubes[row][col-1].setState(cube.getState())
+            #Finally put the cube on the right to the game state
+            self.cubes[row][6].setState(self.state)
         self.turnCount += 1
         self.state = self.states[self.turnCount%2]
+        self.pickedUpCube = None
+        self.droppedPoint = None
+        self.currentPlayer = self.players[self.turnCount%2]
         self.save()
         return self.checkIfWon()
 
@@ -129,23 +150,21 @@ class GameModel():
         '''Checks for rows, cols, or diaganols full of X's or Y's'''
         print('Checking Win')
         for row in range(1, 7):
-            startState = self.cubes[row][1].getState()
-            if startState:
-                print('On row ' + str(row) + ' start is ' + str(startState))
+            startCube = self.cubes[row][1]
+            if startCube:
                 for col in range(1, 7):
                     cube = self.cubes[row][col]
-                    print('Compared to: ' + '(' + str(row) + ', ' + str(col) + '): State: ' + str(cube.getState()))
-                    if cube.getState() != startState:
+                    if cube != startCube:
                         break
                 else:
                     #Won on a row!
                     return True
         for col in range(1, 7):
-            startState = self.cubes[1][col]
-            if startState:
+            startCube = self.cubes[1][col]
+            if startCube:
                 for row in range(1, 7):
                     cube = self.cubes[row][col]
-                    if cube.getState() != startState:
+                    if cube != startCube:
                         break
                 else:
                     #Won on a column!
@@ -164,24 +183,30 @@ class GameModel():
 
     def cancelPickedUp(self):
         self.pickedUpCube.revertState()
+        self.pickedUpCube = None
+        self.droppedPoint = None
 
-    def updateDrops(self, x, y):
+    def getPickedUpCube(self):
+        return self.pickedUpCube
+
+    def updateDrops(self, gamecube):
         """Selects the valid points on a 7x7 grid that are valid entries based on
         and x y coordinate. If point (1, 1) is picked up, valid entries are due east
         and south. (7, 1) and (1, 7). If (1, 2) is picked up, valid entries are west
         south and east (1, 0), (7, 2), (1, 7)
 
         Parameters:
-            -x (int): x coordinate (rows) of the point
-            -y (int): y coordingate (cols) of the point
+            gamecube (obj): Cube object with cooridnates
         """
-        self.pickedUpCube = self.cubes[x][y]
-        self.pickedUpCube.setState(self.state)
+        self.pickedUpCube = gamecube
+        if self.pickedUpCube.getState() is None:
+            self.pickedUpCube.setState(self.state)
         self.dropPoints.clear()
         north = 0
         south = 7
         east = 7
         west = 0
+        x, y = gamecube.getPos()
         if x == 1:
             #On a northern edge
             self.dropPoints.append((south, y))

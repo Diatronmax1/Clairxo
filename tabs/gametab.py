@@ -10,10 +10,9 @@ class WorkerSignals(QObject):
     finished = pyqtSignal()
 
 class ButtonSignals(QObject):
-    pickedUp = pyqtSignal(int, int)
-    cancelMove = pyqtSignal()
-    receievedCube = pyqtSignal()
-    targeted = pyqtSignal(int, int)
+    pickedUp = pyqtSignal(object)
+    receievedCube = pyqtSignal(int, int)
+    cancelSelection = pyqtSignal()
 
 class SquareWidget(QPushButton):
     '''Squares are initially blank but can receive cubes
@@ -21,8 +20,9 @@ class SquareWidget(QPushButton):
     block from the square into the game
     They also are a visual indicator of the valid drop sites
     that a cube can be placed'''
-    def __init__(self, x, y):
+    def __init__(self, client, gamemodel, x, y):
         super().__init__()
+        self.gamemodel = gamemodel
         self.gamecube = None
         self.signals = ButtonSignals()
         self.setAcceptDrops(True)
@@ -32,143 +32,165 @@ class SquareWidget(QPushButton):
         self.y = y
         self.style()
 
-    def style(self, background='blue', font='22pt Comic Sans MS'):
+    def style(self, background='blue', font='22pt Times New Roman'):
         if self.gamecube:
-            self.setText(self.gamecube.getState())
-        if self.validDrop:
+            name = self.gamecube.getState()
+            if self.x == 0 and (self.y != 0 or self.y != 7):
+                #Top Row, arrow should point down
+                self.setText(name + '\nv')
+            elif self.x == 7 and (self.y != 0 and self.y != 7):
+                #Bottom Row, arrow should point up
+                self.setText('^\n' + name)
+            elif self.y == 0:
+                #Left edge, arrow should point right
+                self.setText(name + ' >')
+            elif self.y == 7:
+                #Right edge arrow should point left
+                self.setText('< ' + name)
+        else:
+            self.setText('')
+        if self.validDrop and background=='blue':
             background='green'
         self.setStyleSheet("background-color:" + background + ";"
                            "font: " + font + ";")
 
     def mouseMoveEvent(self, e):
-        '''Allows the cube to be picked up and moved if its on
-        the square'''
+        '''Alerts the widget that a cube has been picked up'''
         if e.buttons() != Qt.RightButton or not self.gamecube:
             return
+        if self.client.getUserName() != self.gamemodel.getCurrentPlayer():
+            return
+        self.signals.pickedUp.emit(self.gamecube)
         mimeData = QMimeData()
-        mimeData.setText(self.squareText)
-        self.squareText = ''
-        self.style()
+        mimeData.setText(str(self.gamecube))
         drag = QDrag(self)
         drag.setMimeData(mimeData)
         drag.setHotSpot(e.pos())
         dropAction = drag.exec_(Qt.MoveAction)
+        self.gamecube = None
+        self.style()
+
+    def dragEnterEvent(self, e):
+        '''If a drag object enters the square
+        accept the drop regardless of what it is'''
+        e.accept()
+        self.style(background='white')
+
+    def dragLeaveEvent(self, e):
+        self.style()
+
+    def dropEvent(self, e):
+        '''If the drag object drops its payload, and the 
+        square is receiving drops request the gamemodel to 
+        provide a game cube matching the payload's string 
+        parameter'''
+        #print('Received Drop: ' + e.mimeData.text())
+        if self.validDrop:
+            self.gamecube = self.gamemodel.getPickedUpCube()
+            self.signals.receievedCube.emit(self.x, self.y)
+        else:
+            self.gamemodel.cancelPickedUp()
+        self.style()
 
     def setValidDrop(self, state):
-        if not self.isblocked:
-            self.validDrop = state
-            self.style()
+        self.validDrop = state
+        self.style()
+          
+    def reset(self):
+        self.gamecube = None
+        self.validDrop = False
+        self.style()
+
+    def refresh(self):
+        self.style()
 
     def resizeEvent(self, event):
         self.resize(self.width(), self.height())
 
-    def dragEnterEvent(self, e):
-        if not self.isblocked:
-            self.style(background = 'white')
-            if e.mimeData().hasFormat('text/plain'):
-                e.accept()
-            else:
-                e.ignore()
-
-    def dragLeaveEvent(self, e):
-        self.style()
-        self.setText('')
-
-    def dropEvent(self, e):
-        if self.validDrop:
-            self.gamemodel.acceptDrop(self.x, self.y)
-            self.squareText = e.mimeData().text()
-            if len(self.squareText) > 1:
-                if self.squareText.find('X') > -1:
-                    self.squareText = 'X'
-                else:
-                    self.squareText = 'Y'
-            if self.x == 0 and (self.y != 0 or self.y != 7):
-                #Top Row, arrow should point down
-                self.squareText += '\nv'
-            elif self.x == 7 and (self.y != 0 and self.y != 7):
-                #Bottom Row, arrow should point up
-                self.squareText = '^\n' + self.squareText
-            elif self.y == 0:
-                #Left edge, arrow should point right
-                self.squareText = self.squareText + '>'
-            elif self.y == 7:
-                self.squareText = '<' + self.squareText
-            self.setText(self.squareText)
-        else:
-            self.gamemodel.rejectDrop()
-        self.style()
-        self.signals.droppedOn.emit()
-        
-    def reset(self):
-        self.setText('')
-        self.validDrop = False
-        self.style()
-
 class CubeWidget(QPushButton):
-    '''Cubes widgets are only responsible for visually showing
-    that they have been picked up'''
-    def __init__(self, gamecube):
+    '''Cubes widgets store their gamecubes and show the states
+    they also alert the model that they have been picked up'''
+    def __init__(self, client, gamemodel, gamecube):
         super().__init__()
         self.setAcceptDrops(True)
+        self.gamemodel = gamemodel
         self.gamecube = gamecube
-        self.pickedUp = False
-        self.isblocked = False
-        if gamecube.state:
-            self.setText(gamecube.state)
-        self.style()
-        self.setFixedSize(75, 75)
+        self.selected = False
         self.signals = ButtonSignals()
+        self.setFixedSize(75, 75)
+        self.style()
+    
+    def style(self, background='brown', font='28pt Times New Roman'):
+        if self.gamecube:
+            state = self.gamecube.getState()
+            if state:
+                if self.selected:
+                    self.setText('| |')
+                else:
+                    self.setText(state)
+            else:
+                self.setText('')
+        if self.selected:
+            background = 'pink'
+        self.setStyleSheet("background-color:" + background + ";"
+                           "font: " + font + ";")
     
     def mouseMoveEvent(self, e):
-        if e.buttons() != Qt.RightButton or not self.gamecube.edge or self.isblocked:
+        '''If the cubes is not an edge cube it cannot be picked up
+        additionally, it cannot be picked up if there is already a cube
+        picked up
+        '''
+        if e.buttons() != Qt.RightButton or not self.gamecube.edge:
             return
-        self.pickedUp = True
-        self.style()
-        self.signals.pickedUp.emit(self.gamecube.x, self.gamecube.y)
+        #Make sure there arent picked up cubes already on the board
+        pc = self.gamemodel.getPickedUpCube()
+        if pc:
+            if self.gamecube != pc:
+                return
+        #Make sure there arent cubes waiting in drop zones
+        dp = self.gamemodel.getDroppedPoint()
+        if dp:
+            return
+        #Make sure you are allowed to pick up this cube type
+        state = self.gamecube.getState()
+        if state:
+            if state != self.gamemodel.getState():
+                return
+        #Ensure you can be playing right now
+        if self.client.getUserName() != self.gamemodel.getCurrentPlayer():
+            return
+        self.gamecube.setState(self.gamemodel.getState())
+        self.signals.pickedUp.emit(self.gamecube)
+        self.selected = True
         mimeData = QMimeData()
-        mimeData.setText('X')
+        mimeData.setText(str(self.gamecube))
         drag = QDrag(self)
         drag.setMimeData(mimeData)
         drag.setHotSpot(e.pos())
         dropAction = drag.exec_(Qt.MoveAction)
+        self.style()
 
-    def style(self, background='brown', font='30pt Comic Sans MS'):
-        if self.pickedUp:
-            background = 'pink'
-            self.setText('')
-        self.setStyleSheet("background-color:" + background + ";"
-                           "font: " + font + ";"
-                           )
-
-    def mousePressEvent(self, e):
-        super().mousePressEvent(e)
-        if e.button() == Qt.LeftButton:
-            print('press')
+    def deSelect(self):
+        self.selected = False
 
     def dragEnterEvent(self, e):
         e.accept()
 
-    def dropEvent(self, e):
-        #Intent must be to cancel the move, so remove the 
-        #valid drops and refresh the model
-        self.pickedUp = False
-        self.signals.cancelMove.emit()
-        self.setText(self.gamecube.state)
+    def dragLeaveEvent(self, e):
         self.style()
 
-    def block(self, state=True):
-        '''Should only block cubes that arent the active cube'''
-        if not self.pickedUp:
-            self.isblocked = state
+    def dropEvent(self, e):
+        '''Intent of dropping on a cube must be to cancel the move
+        '''
+        self.selected = False
+        self.signals.cancelSelection.emit()
+        self.style()
 
     def reset(self):
-        self.isblocked = False
-        self.pickedUp = False
-        if self.gamecube.state:
-            self.setText(self.gamecube.state)
-        else:
-            self.setText('')
+        self.selected = False
+        self.style()
+
+    def refresh(self):
         self.style()
 
 class GameTab(QWidget):
@@ -196,9 +218,9 @@ class GameTab(QWidget):
         for idx, row in enumerate(gamecubes):
             for idy, gamecube in enumerate(row):
                 if gamecube is not None:
-                    newCube = CubeWidget(gamecube)
+                    newCube = CubeWidget(self.client, self.gamemodel, gamecube)
                     newCube.signals.pickedUp.connect(self.pickedUp)
-                    newCube.signals.cancelMove.connect(self.cancelMove)
+                    newCube.signals.cancelSelection.connect(self.cancelMove)
                     self.cubes.append(newCube)
                     layout.addWidget(newCube, gamecube.x, gamecube.y)
                 else:
@@ -211,8 +233,9 @@ class GameTab(QWidget):
                     elif idx == 7 and idy == 7:
                         continue
                     else:
-                        newSquare = SquareWidget(self.gamemodel, idx, idy)
-                        newSquare.signals.droppedOn.connect(self.blockCubes)
+                        newSquare = SquareWidget(self.client, self.gamemodel, idx, idy)
+                        newSquare.signals.receievedCube.connect(self.queueDrop)
+                        newSquare.signals.pickedUp.connect(self.pickedUp)
                         self.squares.append(newSquare)
                         layout.addWidget(newSquare, idx, idy)
         layout = QVBoxLayout(self)
@@ -222,43 +245,6 @@ class GameTab(QWidget):
         layout.addWidget(self.resetBut)
         self.setAcceptDrops(True)
 
-    def passTurn(self):
-        won = self.gamemodel.passTurn()
-        if won:
-            self.statusbar.showMessage('You Win!')
-        else:
-            self.statusbar.showMessage('Other Players Turn!')
-        self.client.passTurn()
-        self.refresh()
-        #self.passTurnBut.setEnabled(False)
-
-    def refresh(self):
-        for cube in self.cubes:
-            cube.reset()
-        for square in self.squares:
-            square.reset()
-
-    def pickedUp(self, x, y):
-        print('Picked Up: ' + str(x) + ', ' + str(y))
-        dropPoints = self.gamemodel.updateDrops(x, y)
-        for point in dropPoints:
-            print(point)
-            for square in self.squares:
-                if point[0] == square.x and point[1] == square.y:
-                    square.setValidDrop(True)
-
-    def cancelMove(self):
-        self.passTurnBut.setEnabled(False)
-        self.gamemodel.cancelPickedUp()
-        print('Canceling move')
-        dropPoints = self.gamemodel.getDropPoints()
-        for point in dropPoints:
-            for square in self.squares:
-                if point[0] == square.x and point[1] == square.y:
-                    square.setValidDrop(False)
-        for cube in self.cubes:
-            cube.block(False)
-
     def reset(self):
         self.gamemodel.reset()
         for square in self.squares:
@@ -266,21 +252,54 @@ class GameTab(QWidget):
         for cube in self.cubes:
             cube.reset()
 
-    def currentState(self):
-        return self.currentState
-        
-    def dragEnterEvent(self, e):
-        e.accept()
-
-    def blockCubes(self):
-        print('Blocking all cubes')
-        if self.gamemodel.getDroppedPoint():
-            self.passTurnBut.setEnabled(True)
-        else:
-            self.passTurnBut.setEnabled(False)
-        #Block all remaining pick ups
+    def refresh(self):
         for cube in self.cubes:
-            cube.block()
+            cube.refresh()
+        for square in self.squares:
+            square.refresh()
+
+    def passTurn(self):
+        '''Should clear the squares of their cubes and move the turn'''
+        for square in self.squares:
+            square.reset()
+        for cube in self.cubes:
+            cube.deSelect()
+        won = self.gamemodel.passTurn()
+        if won:
+            self.statusbar.showMessage('You Win!')
+            self.endGame()
+        else:
+            self.statusbar.showMessage('Other Players Turn!')
+        self.client.passTurn()
+        self.refresh()
+        self.passTurnBut.setEnabled(False)
+
+    def pickedUp(self, gamecube):
+        print('Picked Up: ' + str(gamecube))
+        dropPoints = self.gamemodel.updateDrops(gamecube)
+        for point in dropPoints:
+            for square in self.squares:
+                if point[0] == square.x and point[1] == square.y:
+                    square.setValidDrop(True)
+
+    def cancelMove(self):
+        print('Canceling move')
+        self.passTurnBut.setEnabled(False)
+        self.gamemodel.cancelPickedUp()
+        dropPoints = self.gamemodel.getDropPoints()
+        for point in dropPoints:
+            for square in self.squares:
+                if point[0] == square.x and point[1] == square.y:
+                    square.setValidDrop(False)
+        for cube in self.cubes:
+            cube.deSelect()
+        self.refresh()
+        
+    def queueDrop(self, x, y):
+        '''Alert the game model that a square now has a valid
+        dropped cube'''
+        self.gamemodel.setQueueDrop(x, y)
+        self.passTurnBut.setEnabled(True)
 
     def endGame(self):
         self.signals.finished.emit()
