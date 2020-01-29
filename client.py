@@ -81,6 +81,9 @@ class Client():
         with open(tp, 'a+') as tfile:
             tfile.write(self.playerTarget[:-1] + '-' + savefile + '\n')
 
+    def passTurn(self):
+        print('Alerting other player their turn is ready')
+
     def goOffline(self):
         print('Going offline')
         sp = self.config.getServerPath()

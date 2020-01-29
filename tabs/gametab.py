@@ -224,12 +224,20 @@ class GameTab(QWidget):
         self.setAcceptDrops(True)
 
     def passTurn(self):
-        turn = self.gamemodel.passTurn()
-        self.statusbar.showMessage('Current Turn Count: ' + str(turn))
-        #self.client.passTurn()
+        won = self.gamemodel.passTurn()
+        if won:
+            self.statusbar.showMessage('You Win!')
+        else:
+            self.statusbar.showMessage('Other Players Turn!')
+        self.client.passTurn()
+        self.refresh()
+        #self.passTurnBut.setEnabled(False)
 
     def refresh(self):
-        print('refreshing')
+        for cube in self.cubes:
+            cube.reset()
+        for square in self.squares:
+            square.reset()
 
     def pickedUp(self, x, y):
         print('Picked Up: ' + str(x) + ', ' + str(y))
@@ -242,6 +250,7 @@ class GameTab(QWidget):
 
     def cancelMove(self):
         self.passTurnBut.setEnabled(False)
+        self.gamemodel.cancelPickedUp()
         print('Canceling move')
         dropPoints = self.gamemodel.getDropPoints()
         for point in dropPoints:
