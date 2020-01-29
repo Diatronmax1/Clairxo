@@ -7,6 +7,7 @@ class CFGFile():
         self.serverPath = '//azmain/data/Transfer/LambertC/QuixoServer/users.txt'
         self.transferPath = '//azmain/data/Transfer/LambertC/QuixoServer/transfer.txt'
         self.gamePath = '//azmain/data/Transfer/LambertC/QuixoServer/games/'
+        self.currentGame = None
         self.save()
 
     def setName(self, newname):
@@ -15,23 +16,33 @@ class CFGFile():
         self.name = newname
         self.save()
 
+    def setCurrentGame(self, gamepath):
+        self.currentGame = gamepath
+        self.save()
+
+    def getCurrentGame(self):
+        return self.currentGame
+
     def getName(self):
         return self.name
 
     def setServerPath(self, newpath):
         self.serverPath = newpath
+        self.save()
 
     def getServerPath(self):
         return self.serverPath
 
     def setGamePath(self, newPath):
         self.gamePath = newPath
+        self.save()
 
     def getGamePath(self):
         return self.gamePath
 
     def setTransferPath(self, newPath):
         self.transferPath = newPath
+        self.save()
 
     def getTransferPath(self):
         return self.transferPath

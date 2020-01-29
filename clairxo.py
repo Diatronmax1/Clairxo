@@ -79,6 +79,7 @@ class Clairxo(QMainWindow):
     def createHomePanel(self):
         self.mainwindow = HomeScreen(self.client, self.statusBar())
         self.mainwindow.signals.newGame.connect(self.newGame)
+        self.mainwindow.signals.loadGame.connect(self.loadGame)
         self.client.connect()
         #Start threading
         self.monitor = ClientMonitor(self.client)
@@ -112,7 +113,7 @@ class Clairxo(QMainWindow):
             self.monitor.end()
 
     def loadGame(self):
-        print('loading game')
+        print(self.client.getCurrentGame())
 
     def returnToMain(self):
         #Create all the panel widgets again and reconnect the signals

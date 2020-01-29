@@ -8,6 +8,7 @@ import numpy as np
 
 class WorkerSignals(QObject):
     newGame = pyqtSignal()
+    loadGame = pyqtSignal()
 
 class HomeScreen(QWidget):
     def __init__(self, client, statusbar):
@@ -100,7 +101,11 @@ class HomeScreen(QWidget):
             self.statusbar.showMessage('Setup username first!')
 
     def loadGame(self):
-        self.statusbar.showMessage('Loading game from server')
+        if self.client.getCurrentGame():
+            self.statusbar.showMessage('Loading game from server')
+            self.signals.loadGame.emit()
+        else:
+            self.statusbar.showMessage('No games currently in play, start a new one!')
 
     def setOptions(self):
         self.statusbar.showMessage('Setting Options!')

@@ -80,6 +80,7 @@ class Client():
 
     def alertPlayer(self, savefile):
         tp = self.config.getTransferPath()
+        self.config.setCurrentGame(savefile)
         with open(tp, 'a+') as tfile:
             tfile.write(self.playerTarget[:-1] + '-' + savefile + '\n')
 
@@ -135,10 +136,17 @@ class Client():
                         #Game invite exits
                         name, gamepath = line.split('-')
                         self.invites[os.path.basename(gamepath).split('.')[0]] = gamepath
+        #Check the current game is accesible
+        cg = self.client.getCurrentGame()
+        if not os.path.exists(cg):
+            self.client.setCurrentGame('')
 
     def reset(self):
         self.currentState = self.states[0]
         self.turns = 0
+
+    def getCurrentGame(self):
+        return self.config.getCurrentGame()
 
     def changeTurn(self):
         self.turns += 1
