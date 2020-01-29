@@ -137,9 +137,9 @@ class Client():
                         name, gamepath = line.split('-')
                         self.invites[os.path.basename(gamepath).split('.')[0]] = gamepath
         #Check the current game is accesible
-        cg = self.client.getCurrentGame()
+        cg = self.config.getCurrentGame()
         if not os.path.exists(cg):
-            self.client.setCurrentGame('')
+            self.config.setCurrentGame('')
 
     def reset(self):
         self.currentState = self.states[0]
