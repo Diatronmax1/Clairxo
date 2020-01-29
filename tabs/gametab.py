@@ -12,34 +12,38 @@ class WorkerSignals(QObject):
 class ButtonSignals(QObject):
     pickedUp = pyqtSignal(int, int)
     cancelMove = pyqtSignal()
-    droppedOn = pyqtSignal()
+    receievedCube = pyqtSignal()
     targeted = pyqtSignal(int, int)
 
 class SquareWidget(QPushButton):
-    def __init__(self, gamemodel, x, y):
+    '''Squares are initially blank but can receive cubes
+    temporarily as a way to indicate the intent of moving a
+    block from the square into the game
+    They also are a visual indicator of the valid drop sites
+    that a cube can be placed'''
+    def __init__(self, x, y):
         super().__init__()
-        self.gamemodel = gamemodel
+        self.gamecube = None
         self.signals = ButtonSignals()
         self.setAcceptDrops(True)
         self.setFixedSize(75, 75)
         self.validDrop = False
-        self.isblocked = False
-        self.squareText = ''
         self.x = x
         self.y = y
         self.style()
 
-    def block(self, state=True):
-        '''Prevents all interactions unless it is a valid drop'''
-        if state:
-            if not self.validDrop:
-                self.isblocked = state
-        else:
-            self.isblocked = state
-        self.style()
+    def style(self, background='blue', font='22pt Comic Sans MS'):
+        if self.gamecube:
+            self.setText(self.gamecube.getState())
+        if self.validDrop:
+            background='green'
+        self.setStyleSheet("background-color:" + background + ";"
+                           "font: " + font + ";")
 
     def mouseMoveEvent(self, e):
-        if e.buttons() != Qt.RightButton or not self.squareText:
+        '''Allows the cube to be picked up and moved if its on
+        the square'''
+        if e.buttons() != Qt.RightButton or not self.gamecube:
             return
         mimeData = QMimeData()
         mimeData.setText(self.squareText)
@@ -49,13 +53,6 @@ class SquareWidget(QPushButton):
         drag.setMimeData(mimeData)
         drag.setHotSpot(e.pos())
         dropAction = drag.exec_(Qt.MoveAction)
-
-    def style(self, background='blue', font='22pt Comic Sans MS'):
-        if self.validDrop:
-            background='green'
-        self.setStyleSheet("background-color:" + background + ";"
-                           "font: " + font + ";"
-                           )
 
     def setValidDrop(self, state):
         if not self.isblocked:
@@ -109,6 +106,8 @@ class SquareWidget(QPushButton):
         self.style()
 
 class CubeWidget(QPushButton):
+    '''Cubes widgets are only responsible for visually showing
+    that they have been picked up'''
     def __init__(self, gamecube):
         super().__init__()
         self.setAcceptDrops(True)
