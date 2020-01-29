@@ -81,7 +81,6 @@ class Clairxo(QMainWindow):
         self.show()
 
     def refresh(self):
-        return
         self.mainwindow.refresh()
 
     def newGame(self):
@@ -92,6 +91,7 @@ class Clairxo(QMainWindow):
         self.playerSelect = PlayerQuery(self.client)
         self.playerSelect.exec_()
         self.gamemodel = GameModel()
+        self.threadpool.stop(self.monitor)
         self.gameWidget = GameTab(self.client, self.gamemodel)
         self.gameWidget.signals.finished.connect(self.returnToMain)
         self.setCentralWidget(self.gameWidget)
