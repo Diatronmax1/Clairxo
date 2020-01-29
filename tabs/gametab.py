@@ -14,14 +14,14 @@ class ButtonSignals(QObject):
     targeted = pyqtSignal(int, int)
 
 class SquareWidget(QPushButton):
-    def __init__(self, x, y):
+    def __init__(self, gamemodel, x, y):
         super().__init__()
+        self.gamemodel = gamemodel
         self.setAcceptDrops(True)
         self.setFixedSize(75, 75)
         self.setStyleSheet('background-color:blue')
         self.x = x
         self.y = x
-        self.validDrop = False
 
     def resizeEvent(self, event):
         self.resize(self.width(), self.height())
@@ -39,34 +39,38 @@ class SquareWidget(QPushButton):
         self.setText('')
 
     def dropEvent(self, e):
-        return
-        if self.edge and self.model.validDrop(self.x, self.y):
-            self.model.changeTurn()
-            self.setText(e.mimeData().text())
+        self.gamemodel.acceptDrop(self.x, self.y)
+        self.setText(e.mimeData().text())
 
     def reset(self):
-        self.setText('Empty')
+        self.setText('')
+        self.setStyleSheet('background-color:blue')
 
 class CubeWidget(QPushButton):
     def __init__(self, gamecube):
         super().__init__()
+        self.gamecube = gamecube
         if gamecube.state:
             self.setText(gamecube.state)
-        self.setStyleSheet('background-color:brown')
+        self.style()
         self.setFixedSize(75, 75)
         self.signals = ButtonSignals()
     
     def mouseMoveEvent(self, e):
         if e.buttons() != Qt.RightButton:
             return
-        self.setText('Moving!')
-        #self.signals.selected.emit(self.x, self.y)
+        self.style(background='green')
         mimeData = QMimeData()
         mimeData.setText('X')
         drag = QDrag(self)
         drag.setMimeData(mimeData)
         drag.setHotSpot(e.pos())
         dropAction = drag.exec_(Qt.MoveAction)
+
+    def style(self, background='brown', font='30pt Comic Sans MS'):
+        self.setStyleSheet("background-color:" + background + ";"
+                           "font: " + font + ";"
+                           )
 
     def mousePressEvent(self, e):
         super().mousePressEvent(e)
@@ -75,7 +79,11 @@ class CubeWidget(QPushButton):
             print('press')
 
     def reset(self):
-        self.setText('')
+        if self.gamecube.state:
+            self.setText(self.gamecube.state)
+        else:
+            self.setText('')
+        self.style()
 
 class GameTab(QWidget):
     def __init__(self, client, gamemodel, statusbar):
@@ -85,6 +93,8 @@ class GameTab(QWidget):
         self.statusbar = statusbar
         self.statusbar.showMessage('Your Turn!')
         self.signals = WorkerSignals()
+        self.passTurnBut = QPushButton('Accept and Pass Turn')
+        self.passTurnBut.clicked.connect(self.passTurn)
         self.endgamebut = QPushButton('End Game')
         self.endgamebut.clicked.connect(self.endGame)
         self.refreshBut = QPushButton('Refresh')
@@ -95,42 +105,30 @@ class GameTab(QWidget):
         cubes = self.gamemodel.getCubes()
         for idx, row in enumerate(cubes):
             for idy, gamecube in enumerate(row):
-                if gamecube is not None:
+                if idx == 0 and idy == 0:
+                    continue
+                elif idx == 7 and idy == 0:
+                    continue
+                elif idx == 0 and idy == 7:
+                    continue
+                elif idx == 7 and idy == 7:
+                    continue
+                elif gamecube is not None:
                     newCube = CubeWidget(gamecube)
                     layout.addWidget(newCube, gamecube.x, gamecube.y)
                 else:
-                    newSquare = SquareWidget(idx, idy)
+                    newSquare = SquareWidget(self.gamemodel, idx, idy)
                     layout.addWidget(newSquare, idx, idy)
         layout = QVBoxLayout(self)
         layout.addWidget(gameArea)
+        layout.addWidget(self.passTurnBut)
         layout.addWidget(self.endgamebut)
-        # idx = 0
-        # self.squares = {}
-        # for x in range(7):
-        #     for y in range(7):
-        #         if x == 0 or x == 6 or y == 0 or y == 6:
-        #             edge = True
-        #         else:
-        #             edge = False
-        #         self.currentSquare = Square('Empty', self, self.gamemodel, x, y, edge)
-        #         self.squares[str(idx)] = self.currentSquare
-        #         idx += 1
-        #         layout.addWidget(self.currentSquare, x, y)
-        # idx = 0
-        # self.cubes = {}
-        # for x in range(1, 6):
-        #     for y in range(1, 6):
-        #         if x == 1 or x==5 or y==1 or y==5:
-        #             edge = True
-        #         else:
-        #             edge = False
-        #         self.currentCube = Cube(' ', self, self.gamemodel, x, y, edge)
-        #         self.currentCube.signals.selected.connect(self.pickedUp)
-        #         self.cubes[str(idx)] = self.currentCube
-        #         idx += 1
-        #         layout.addWidget(self.currentCube, x, y)
-        # layout.addWidget(self.endgamebut, 7, 0, 1, 7)
         self.setAcceptDrops(True)
+
+    def passTurn(self):
+        turn = self.gamemodel.passTurn()
+        self.statusbar.showMessage('Current Turn Count: ' + str(turn))
+        #self.client.passTurn()
 
     def refresh(self):
         print('refreshing')
@@ -155,6 +153,8 @@ class GameTab(QWidget):
         e.accept()
 
     def dropEvent(self, e):
+        #Handles the drop information for 
+        #The dropped cube
         print(e.mimeData().text())
         position = e.pos()
         #self.cube.move(position)
@@ -163,3 +163,72 @@ class GameTab(QWidget):
 
     def endGame(self):
         self.signals.finished.emit()
+
+    def changeTurn(self):
+        self.turns += 1
+        self.currentState = self.states[self.turns%2]
+        return self.currentState
+
+    def getState(self):
+        return self.currentState
+
+    def validDrop(self, x, y):
+        newPoint = Point(x, y)
+        found = False
+        for point in self.dropPoints:
+            if point == newPoint:
+                found = True
+        return found
+
+    def updateDrops(self, x, y):
+        """Selects the valid points on a 7x7 grid that are valid entries based on
+        and x y coordinate. If point (1, 1) is picked up, valid entries are due east
+        and south. (7, 1) and (1, 7). If (1, 2) is picked up, valid entries are west
+        south and east (1, 0), (7, 2), (1, 7)
+
+        Parameters:
+            -x (int): x coordinate (rows) of the point
+            -y (int): y coordingate (cols) of the point
+        """
+        self.dropPoints.clear()
+        north = 0
+        south = 6
+        east = 6
+        west = 0
+        print(str(x) + ', ' + str(y))
+        if x == 1:
+            #On a northern edge
+            self.dropPoints.append(Point(south, y))
+            if y == 1:
+                #North West Corner
+                self.dropPoints.append(Point(x, east))
+            elif y == 5:
+                #North East Corner
+                self.dropPoints.append(Point(x, west))
+            else:
+                #Northern Edge
+                self.dropPoints.append(Point(x, west))
+                self.dropPoints.append(Point(x, east))
+        elif x == 5:
+            #On a southern edge
+            self.dropPoints.append(Point(north, y))
+            if y == 1:
+                #South West Corner
+                self.dropPoints.append(Point(x, east))
+            elif y == 5:
+                #South East Corner
+                self.dropPoints.append(Point(x, west))
+            else:
+                self.dropPoints.append(Point(x, west))
+                self.dropPoints.append(Point(x, east))
+        else:
+            #Western or Eastern Front
+            if y == 1:
+                self.dropPoints.append(Point(x, east))
+                self.dropPoints.append(Point(north, y))
+                self.dropPoints.append(Point(south, y))
+            elif y == 5:
+                self.dropPoints.append(Point(x, west))
+                self.dropPoints.append(Point(north, y))
+                self.dropPoints.append(Point(south, y))
+        return self.dropPoints

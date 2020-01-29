@@ -26,7 +26,6 @@ class GameModel():
         self.client = client
         time = dt.datetime.now()
         self.filename = time.strftime("%d%m%Y") + self.client.getUserName()[:-1] + self.client.getPlayerTarget()[:-1]
-        self.save()
         self.cubes = np.ndarray(shape=(8,8), dtype=object)
         #Starting configuration is a 5x5 grid of cubes all incremented by 1
         #so that top left is (1, 1), top right is (1, 6), bot left is (6, 1)
@@ -34,6 +33,28 @@ class GameModel():
         for x in range(1, 7):
             for y in range(1, 7):
                 self.cubes[x][y] = Cube(x, y)
+        self.states = ['X', 'Y']
+        self.state = self.states[0]
+        self.turnCount = 0
+        self.save()
+
+    def reset(self):
+        #Clear the cubes
+        for cube in self.cubes:
+            if cube:
+                cube.clear()
+        self.state = self.states[0]
+        self.turnCount = 0
+
+    def acceptDrop(self, x, y):
+        print(x)
+        print(y)
+
+    def passTurn(self):
+        self.turnCount += 1
+        self.state = self.states[self.turnCount%2]
+        self.save()
+        return self.turnCount
 
     def getCubes(self):
         return self.cubes
@@ -43,10 +64,10 @@ class GameModel():
         gamefolder = self.client.getGamePath()
         savefile = os.path.join(gamefolder, self.filename)
         count = 0
-        savefile = savefile + str(count)
-        while os.path.exists(savefile + '.gtp'):
+        attemptfile = savefile + str(count)
+        while os.path.exists(attemptfile + '.gtp'):
             count += 1
-            savefile = savefile[:-1] + str(count)
-        self.client.alertPlayer(savefile + '.gtp')
-        with open(savefile + '.gtp', 'wb') as gfile:
+            attemptfile = savefile + str(count)
+        self.client.alertPlayer(attemptfile + '.gtp')
+        with open(attemptfile + '.gtp', 'wb') as gfile:
             pickle.dump(self, gfile)

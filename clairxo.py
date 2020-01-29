@@ -10,6 +10,7 @@ from lib.gamemodel import GameModel
 from tabs.gametab import GameTab
 from tabs.panel import HomeScreen
 import time
+import pickle
 
 class WorkerSignals(QObject):
     notify = pyqtSignal()
@@ -113,7 +114,14 @@ class Clairxo(QMainWindow):
             self.monitor.end()
 
     def loadGame(self):
-        print(self.client.getCurrentGame())
+        currentGame = self.client.getCurrentGame()
+        with open(currentGame, 'rb') as gfile:
+            self.gamemodel = pickle.load(gfile)
+            self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
+            self.gameWidget.signals.finished.connect(self.returnToMain)
+            self.setCentralWidget(self.gameWidget)
+            self.mainwindow = None
+            self.monitor.end()
 
     def returnToMain(self):
         #Create all the panel widgets again and reconnect the signals
@@ -122,6 +130,7 @@ class Clairxo(QMainWindow):
         #Delete all the old game information
         self.gamemodel = None
         self.gameWidget = None
+        self.statusBar().showMessage('Main Menu')
 
         
 if __name__ == '__main__':

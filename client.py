@@ -41,9 +41,6 @@ class Client():
     def getInvites(self):
         return self.invites
 
-    def startNewGame(self):
-        pass
-
     def checkUserName(self):
         return self.user
 
@@ -141,78 +138,5 @@ class Client():
             if not os.path.exists(cg):
                 self.config.setCurrentGame('')
 
-    def reset(self):
-        self.currentState = self.states[0]
-        self.turns = 0
-
     def getCurrentGame(self):
         return self.config.getCurrentGame()
-
-    def changeTurn(self):
-        self.turns += 1
-        self.currentState = self.states[self.turns%2]
-        return self.currentState
-
-    def getState(self):
-        return self.currentState
-
-    def validDrop(self, x, y):
-        newPoint = Point(x, y)
-        found = False
-        for point in self.dropPoints:
-            if point == newPoint:
-                found = True
-        return found
-
-    def updateDrops(self, x, y):
-        """Selects the valid points on a 7x7 grid that are valid entries based on
-        and x y coordinate. If point (1, 1) is picked up, valid entries are due east
-        and south. (7, 1) and (1, 7). If (1, 2) is picked up, valid entries are west
-        south and east (1, 0), (7, 2), (1, 7)
-
-        Parameters:
-            -x (int): x coordinate (rows) of the point
-            -y (int): y coordingate (cols) of the point
-        """
-        self.dropPoints.clear()
-        north = 0
-        south = 6
-        east = 6
-        west = 0
-        print(str(x) + ', ' + str(y))
-        if x == 1:
-            #On a northern edge
-            self.dropPoints.append(Point(south, y))
-            if y == 1:
-                #North West Corner
-                self.dropPoints.append(Point(x, east))
-            elif y == 5:
-                #North East Corner
-                self.dropPoints.append(Point(x, west))
-            else:
-                #Northern Edge
-                self.dropPoints.append(Point(x, west))
-                self.dropPoints.append(Point(x, east))
-        elif x == 5:
-            #On a southern edge
-            self.dropPoints.append(Point(north, y))
-            if y == 1:
-                #South West Corner
-                self.dropPoints.append(Point(x, east))
-            elif y == 5:
-                #South East Corner
-                self.dropPoints.append(Point(x, west))
-            else:
-                self.dropPoints.append(Point(x, west))
-                self.dropPoints.append(Point(x, east))
-        else:
-            #Western or Eastern Front
-            if y == 1:
-                self.dropPoints.append(Point(x, east))
-                self.dropPoints.append(Point(north, y))
-                self.dropPoints.append(Point(south, y))
-            elif y == 5:
-                self.dropPoints.append(Point(x, west))
-                self.dropPoints.append(Point(north, y))
-                self.dropPoints.append(Point(south, y))
-        return self.dropPoints
