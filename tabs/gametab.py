@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, Q
                              QRadioButton, QTextEdit, QVBoxLayout, QWidget)
 import time
 import numpy as np
+import pickle
 
 class WorkerSignals(QObject):
     finished = pyqtSignal()
@@ -22,6 +23,7 @@ class SquareWidget(QPushButton):
     that a cube can be placed'''
     def __init__(self, client, gamemodel, x, y):
         super().__init__()
+        self.client = client
         self.gamemodel = gamemodel
         self.gamecube = None
         self.signals = ButtonSignals()
@@ -113,12 +115,16 @@ class CubeWidget(QPushButton):
     def __init__(self, client, gamemodel, gamecube):
         super().__init__()
         self.setAcceptDrops(True)
+        self.client = client
         self.gamemodel = gamemodel
         self.gamecube = gamecube
         self.selected = False
         self.signals = ButtonSignals()
         self.setFixedSize(75, 75)
         self.style()
+
+    def setGameCube(self, gamecube):
+        self.gamecube = gamecube
     
     def style(self, background='brown', font='28pt Times New Roman'):
         if self.gamecube:
@@ -207,8 +213,8 @@ class GameTab(QWidget):
         self.endgamebut = QPushButton('End Game')
         self.endgamebut.clicked.connect(self.endGame)
         #Development
-        self.resetBut = QPushButton('Reset Game')
-        self.resetBut.clicked.connect(self.reset)
+        self.refreshBut = QPushButton('Refresh')
+        self.refreshBut.clicked.connect(self.reloadGame)
         gameArea = QWidget()
         layout = QGridLayout(gameArea)
         #Make the outer layer of Squares
@@ -242,8 +248,15 @@ class GameTab(QWidget):
         layout.addWidget(gameArea)
         layout.addWidget(self.passTurnBut)
         layout.addWidget(self.endgamebut)
-        layout.addWidget(self.resetBut)
+        layout.addWidget(self.refreshBut)
         self.setAcceptDrops(True)
+
+    def reloadGame(self):
+        currentGame = self.client.getCurrentGame()
+        with open(currentGame, 'rb') as gfile:
+            self.gamemodel = pickle.load(gfile)
+        for cube in self.cubes:
+            cube.setGameCube(self.gamemodel.getCube(cube.x, cube.y))
 
     def reset(self):
         self.gamemodel.reset()

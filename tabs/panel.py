@@ -2,13 +2,78 @@ from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject, QThreadPool, QRunna
 from PyQt5.QtGui import QDrag, QPixmap, QPalette, QBrush
 from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, QInputDialog, 
                              QLabel, QListWidget, QListWidgetItem, QLineEdit, QPushButton, QProgressBar, 
-                             QRadioButton, QTextEdit, QVBoxLayout, QWidget)
+                             QRadioButton, QTextEdit, QVBoxLayout, QDialog, QWidget)
 import time
 import numpy as np
 
 class WorkerSignals(QObject):
-    newGame = pyqtSignal()
+    newGame = pyqtSignal(str)
     loadGame = pyqtSignal()
+
+class PlayerQuery(QDialog):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
+        self.acceptBut = QPushButton('Accept')
+        self.acceptBut.clicked.connect(self.testAccept)
+        self.cancelBut = QPushButton('Cancel')
+        self.cancelBut.clicked.connect(self.reject)
+        self.playerList = QListWidget()
+        self.msgBar = QLabel('')
+        players = self.client.getOnlinePlayers()
+        for player in players:
+            self.playerList.addItem(player[:-1])
+        self.playerList.itemClicked.connect(self.setPlayerTarget)
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel('Select a player'))
+        layout.addWidget(self.playerList)
+        layout.addWidget(self.acceptBut)
+        layout.addWidget(self.cancelBut)
+        layout.addWidget(self.msgBar)
+        self.player = ''
+
+    def setPlayerTarget(self, state):
+        name = state.text() + '\n'
+        self.player = name
+        self.client.setPlayerTarget(name)
+
+    def testAccept(self):
+        if self.player:
+            self.accept()
+        else:
+            self.msgBar.setText('Select a player first!')
+
+class InviteQuery(QDialog):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
+        self.acceptBut = QPushButton('Accept')
+        self.acceptBut.clicked.connect(self.testAccept)
+        self.cancelBut = QPushButton('Cancel')
+        self.cancelBut.clicked.connect(self.reject)
+        self.inviteList = QListWidget()
+        self.msgBar = QLabel('')
+        invites = self.client.getInvites()
+        for invite in invites:
+            self.inviteList.addItem(player[:-1])
+        self.inviteList.itemClicked.connect(self.setInviteTarget)
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel('Select a player'))
+        layout.addWidget(self.inviteList)
+        layout.addWidget(self.acceptBut)
+        layout.addWidget(self.cancelBut)
+        layout.addWidget(self.msgBar)
+        self.invite = ''
+
+    def setInviteTarget(self, state):
+        self.invite = state.text()
+
+    def testAccept(self):
+        if self.invite:
+            self.client.acceptInvite(invite)
+            self.accept()
+        else:
+            self.msgBar.setText('Select a player first!')
 
 class HomeScreen(QWidget):
     def __init__(self, client, statusbar):
@@ -86,13 +151,22 @@ class HomeScreen(QWidget):
         self.setPalette(p)
 
     def viewInvites(self):
-        print(self.client.getInvites())
+        if self.client.getUserName():
+            if self.client.getInvites():
+                self.inviteSelect = InviteQuery(self.client)
+                self.inviteSelect.exec_()
 
     def startNewGame(self):
         if self.client.getUserName():
             if self.client.getOnlinePlayers():
-                self.statusbar.showMessage('Starting new game!')
-                self.signals.newGame.emit()
+                self.client.setPlayerTarget('')
+                self.playerSelect = PlayerQuery(self.client)
+                self.playerSelect.exec_()
+                #Check if the client has a selected player
+                player = self.client.getPlayerTarget()
+                if player:
+                    self.statusbar.showMessage('Starting new game!')
+                    self.signals.newGame.emit(player)
             else:
                 self.statusbar.showMessage('No online players to play with :(')
         else:

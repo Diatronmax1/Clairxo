@@ -39,7 +39,7 @@ class GameModel():
         self.currentPlayer = self.players[0]
         self.client = client
         time = dt.datetime.now()
-        self.filename = time.strftime("%d%m%Y") + self.client.getUserName()[:-1] + self.client.getPlayerTarget()[:-1]
+        self.filename = time.strftime("%d%m%Y") + self.players[0][:-1] + self.players[1][:-1]
         self.cubes = np.ndarray(shape=(8,8), dtype=object)
         #Starting configuration is a 5x5 grid of cubes all incremented by 1
         #so that top left is (1, 1), top right is (1, 6), bot left is (6, 1)
@@ -87,6 +87,13 @@ class GameModel():
 
     def getDroppedPoint(self):
         return self.droppedPoint
+
+    def getCube(self, x, y):
+        for row in self.cubes:
+            for cube in row:
+                if cube:
+                    if x == cube.x and y == cube.y:
+                        return cube
 
     def passTurn(self):
         #Move the dropped block into the grid shifting all of the cubes.

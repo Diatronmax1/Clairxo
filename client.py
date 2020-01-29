@@ -41,6 +41,9 @@ class Client():
     def getInvites(self):
         return self.invites
 
+    def acceptInvite(self, invite):
+        print('Invite accepted!: ' + self.invites[invite])
+
     def checkUserName(self):
         return self.user
 

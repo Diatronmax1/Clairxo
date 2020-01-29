@@ -31,39 +31,6 @@ class ClientMonitor(QRunnable):
     def end(self):
         self.working = False
 
-class PlayerQuery(QDialog):
-    def __init__(self, client):
-        super().__init__()
-        self.client = client
-        self.acceptBut = QPushButton('Accept')
-        self.acceptBut.clicked.connect(self.testAccept)
-        self.cancelBut = QPushButton('Cancel')
-        self.cancelBut.clicked.connect(self.reject)
-        self.playerList = QListWidget()
-        self.msgBar = QLabel('')
-        players = self.client.getOnlinePlayers()
-        for player in players:
-            self.playerList.addItem(player[:-1])
-        self.playerList.itemClicked.connect(self.setPlayerTarget)
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel('Select a player'))
-        layout.addWidget(self.playerList)
-        layout.addWidget(self.acceptBut)
-        layout.addWidget(self.cancelBut)
-        layout.addWidget(self.msgBar)
-        self.player = ''
-
-    def setPlayerTarget(self, state):
-        name = state.text() + '\n'
-        self.player = name
-        self.client.setPlayerTarget(name)
-
-    def testAccept(self):
-        if self.player:
-            self.accept()
-        else:
-            self.msgBar.setText('Select a player first!')
-
 class Clairxo(QMainWindow):
     
     def __init__(self, size):
@@ -91,27 +58,20 @@ class Clairxo(QMainWindow):
         if self.mainwindow:
             self.mainwindow.refresh()
 
-    def newGame(self):
+    def newGame(self, player):
         '''Queries the client if there is already a current game in 
         progress, if not generates a new game model and a game
         widget to hold it.
         '''
-        self.client.setPlayerTarget('')
-        self.playerSelect = PlayerQuery(self.client)
-        self.playerSelect.exec_()
-        #Check if the client has a selected player
-        player = self.client.getPlayerTarget()
-        if player:
-            #We can create a game.
-            print('Starting a game with ' + player)
-            self.gamemodel = GameModel(self.client)
-            self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
-            self.gameWidget.signals.finished.connect(self.returnToMain)
-            self.setCentralWidget(self.gameWidget)
-            #Now that the main widget has been reset all panel items
-            #Should be discarded
-            self.mainwindow = None
-            self.monitor.end()
+        print('Starting a game with ' + player)
+        self.gamemodel = GameModel(self.client, self.client.getUserName(), player)
+        self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
+        self.gameWidget.signals.finished.connect(self.returnToMain)
+        self.setCentralWidget(self.gameWidget)
+        #Now that the main widget has been reset all panel items
+        #Should be discarded
+        self.mainwindow = None
+        self.monitor.end()
 
     def loadGame(self):
         currentGame = self.client.getCurrentGame()
