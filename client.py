@@ -110,7 +110,6 @@ class Client():
             print('No username set yet')
             return
         if os.path.exists(sp):
-            print('Connected to server')
             players = []
             online = False
             with open(sp, 'r') as slink:

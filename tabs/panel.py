@@ -74,6 +74,7 @@ class HomeScreen(QWidget):
         layout.addWidget(QLabel('\t'),                  8, 0, 1, 3)
         
     def refresh(self):
+        self.client.connect()
         self.playerList.clear()
         players = self.client.getOnlinePlayers()
         for player in players:
