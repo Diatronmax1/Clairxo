@@ -78,6 +78,9 @@ class Client():
             print('Didnt\'t connect to server to find players')
         return players
 
+    def setPlayerTarget(self, playerName):
+        print(playerName)
+
     def goOffline(self):
         print('Going offline')
         sp = self.config.getServerPath()

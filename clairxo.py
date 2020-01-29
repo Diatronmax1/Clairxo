@@ -2,10 +2,13 @@
 #Author Chris Lambert
 from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject, QThreadPool, QRunnable
 from PyQt5.QtWidgets import (QMainWindow, QAction, QApplication, qApp, QLabel, QFileDialog,
-                             QTabWidget, QWidget)
+                             QTabWidget, QWidget, QVBoxLayout, QListWidget, QDialog, QPushButton)
 import sys
-from panel import HomeScreen
+
 from client import Client
+from lib.gamemodel import GameModel
+from tabs.gametab import GameTab
+from tabs.panel import HomeScreen
 import time
 
 class WorkerSignals(QObject):
@@ -24,6 +27,40 @@ class ClientMonitor(QRunnable):
             #players = self.client.getOnlinePlayers()
             self.signals.notify.emit()
 
+class PlayerQuery(QDialog):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
+        self.acceptBut = QPushButton('Accept')
+        self.acceptBut.clicked.connect(self.testAccept)
+        self.cancelBut = QPushButton('Cancel')
+        self.cancelBut.clicked.connect(self.reject)
+        self.playerList = QListWidget()
+        self.msgBar = QLabel('')
+        players = self.client.getOnlinePlayers()
+        for player in players:
+            self.playerList.addItem(player[:-1])
+        self.playerList.addItems(self.client.getOnlinePlayers())
+        self.playerList.itemClicked.connect(self.setPlayerTarget)
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel('Select a player'))
+        layout.addWidget(self.playerList)
+        layout.addWidget(self.acceptBut)
+        layout.addWidget(self.cancelBut)
+        layout.addWidget(self.msgBar)
+        self.player = ''
+
+    def setPlayerTarget(self, state):
+        name = state.text() + '\n'
+        self.player = name
+        self.client.setPlayerTarget(name)
+
+    def testAccept(self):
+        if self.player:
+            self.accept()
+        else:
+            self.msgBar.setText('Select a player first!')
+
 class Clairxo(QMainWindow):
     
     def __init__(self, size):
@@ -31,6 +68,7 @@ class Clairxo(QMainWindow):
         self.threadpool = QThreadPool()
         self.client = Client()
         self.mainwindow = HomeScreen(self.client, self.statusBar(), self)
+        self.mainwindow.signals.newGame.connect(self.newGame)
         self.client.connect()
         #Start threading
         self.monitor = ClientMonitor(self.client)
@@ -43,7 +81,26 @@ class Clairxo(QMainWindow):
         self.show()
 
     def refresh(self):
+        return
         self.mainwindow.refresh()
+
+    def newGame(self):
+        '''Queries the client if there is already a current game in 
+        progress, if not generates a new game model and a game
+        widget to hold it.
+        '''
+        self.playerSelect = PlayerQuery(self.client)
+        self.playerSelect.exec_()
+        self.gamemodel = GameModel()
+        self.gameWidget = GameTab(self.client, self.gamemodel)
+        self.gameWidget.signals.finished.connect(self.returnToMain)
+        self.setCentralWidget(self.gameWidget)
+
+    def returnToMain(self):
+        self.mainwindow = HomeScreen(self.client, self.statusBar(), self)
+        self.mainwindow.signals.newGame.connect(self.newGame)
+        self.setCentralWidget(self.mainwindow)
+
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)

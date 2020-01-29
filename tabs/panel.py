@@ -6,10 +6,13 @@ from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, Q
 import time
 import numpy as np
 
+class WorkerSignals(QObject):
+    newGame = pyqtSignal()
+
 class HomeScreen(QWidget):
     def __init__(self, client, statusbar, parent):
         super().__init__(parent)
-        self.threadpool = QThreadPool()
+        self.signals = WorkerSignals()
         #Client comes in loaded with a config
         self.client = client
         self.statusbar = statusbar
@@ -74,6 +77,7 @@ class HomeScreen(QWidget):
 
     def startNewGame(self):
         self.statusbar.showMessage('Starting new game!')
+        self.signals.newGame.emit()
 
     def loadGame(self):
         self.statusbar.showMessage('Loading game from server')
