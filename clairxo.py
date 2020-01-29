@@ -22,10 +22,13 @@ class ClientMonitor(QRunnable):
         self.working = True
 
     def run(self):
+        self.working = True
         while self.working:
             time.sleep(1)
-            #players = self.client.getOnlinePlayers()
             self.signals.notify.emit()
+
+    def end(self):
+        self.working = False
 
 class PlayerQuery(QDialog):
     def __init__(self, client):
@@ -67,7 +70,7 @@ class Clairxo(QMainWindow):
         super().__init__()
         self.threadpool = QThreadPool()
         self.client = Client()
-        self.mainwindow = HomeScreen(self.client, self.statusBar(), self)
+        self.mainwindow = HomeScreen(self.client, self.statusBar())
         self.mainwindow.signals.newGame.connect(self.newGame)
         self.client.connect()
         #Start threading
@@ -90,16 +93,30 @@ class Clairxo(QMainWindow):
         '''
         self.playerSelect = PlayerQuery(self.client)
         self.playerSelect.exec_()
-        self.gamemodel = GameModel()
-        self.threadpool.stop(self.monitor)
-        self.gameWidget = GameTab(self.client, self.gamemodel)
-        self.gameWidget.signals.finished.connect(self.returnToMain)
-        self.setCentralWidget(self.gameWidget)
+        #Check if the client has a selected player
+        player = self.client.getPlayerTarget()
+        if player:
+            #We can create a game.
+            self.gamemodel = GameModel()
+            self.gameWidget = GameTab(self.client, self.gamemodel)
+            self.gameWidget.signals.finished.connect(self.returnToMain)
+            self.setCentralWidget(self.gameWidget)
+            #Now that the main widget has been reset all panel items
+            #Should be discarded
+            self.mainwindow = None
+            self.monitor.end()
 
     def returnToMain(self):
-        self.mainwindow = HomeScreen(self.client, self.statusBar(), self)
+        #Create all the panel widgets again and reconnect the signals
+        self.mainwindow = HomeScreen(self.client, self.statusBar())
         self.mainwindow.signals.newGame.connect(self.newGame)
+        self.monitor = ClientMonitor(self.client)
+        self.monitor.signals.notify.connect(self.refresh)
+        self.threadpool.start(self.monitor)
         self.setCentralWidget(self.mainwindow)
+        #Delete all the old game information
+        self.gamemodel = None
+        self.gameWidget = None
 
         
 if __name__ == '__main__':

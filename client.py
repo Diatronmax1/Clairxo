@@ -23,6 +23,7 @@ class Client():
     def __init__(self):
         self.cfgfile = 'lib/cfg/cfg.tp'
         self.config = None
+        self.playerTarget = None
         self.load()
 
     def load(self):
@@ -79,7 +80,10 @@ class Client():
         return players
 
     def setPlayerTarget(self, playerName):
-        print(playerName)
+        self.playerTarget = playerName
+
+    def getPlayerTarget(self):
+        return self.playerTarget
 
     def goOffline(self):
         print('Going offline')

@@ -10,8 +10,8 @@ class WorkerSignals(QObject):
     newGame = pyqtSignal()
 
 class HomeScreen(QWidget):
-    def __init__(self, client, statusbar, parent):
-        super().__init__(parent)
+    def __init__(self, client, statusbar):
+        super().__init__()
         self.signals = WorkerSignals()
         #Client comes in loaded with a config
         self.client = client
