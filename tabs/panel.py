@@ -29,7 +29,7 @@ class HomeScreen(QWidget):
         self.userName.setStyleSheet('background-color:white')
         name = self.client.getUserName()
         if name:
-            self.userName.setText(name)
+            self.userName.setText(name[:-1])
         else:
             self.statusbar.showMessage('Set User in the options')
         userBox = QWidget()

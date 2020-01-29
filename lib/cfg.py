@@ -29,6 +29,12 @@ class CFGFile():
     def getServerPath(self):
         return self.serverPath
 
+    def setGamePath(self, newPath):
+        self.gamePath = newPath
+
+    def getGamePath(self):
+        return self.gamePath
+
     def save(self):
         with open(self.path, 'wb') as cfile:
             pickle.dump(self, cfile)

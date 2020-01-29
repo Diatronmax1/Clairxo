@@ -2,20 +2,6 @@ import os
 from lib.cfg import CFGFile
 import pickle
 
-class Point():
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        print(str(x) + ', ' + str(y)) 
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-    def getIndex(self):
-        print(self.x)
-        print(self.y)
-        return (self.x*7) + self.y
-
 class Client():
     '''Loads the players default settings which include
     username and games as well as stats
@@ -65,6 +51,9 @@ class Client():
 
     def getUserName(self):
         return self.config.getName()
+
+    def getGamePath(self):
+        return self.config.getGamePath()
 
     def getOnlinePlayers(self):
         players = []

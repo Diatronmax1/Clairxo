@@ -43,7 +43,6 @@ class PlayerQuery(QDialog):
         players = self.client.getOnlinePlayers()
         for player in players:
             self.playerList.addItem(player[:-1])
-        self.playerList.addItems(self.client.getOnlinePlayers())
         self.playerList.itemClicked.connect(self.setPlayerTarget)
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel('Select a player'))
@@ -84,21 +83,24 @@ class Clairxo(QMainWindow):
         self.show()
 
     def refresh(self):
-        self.mainwindow.refresh()
+        if self.mainwindow:
+            self.mainwindow.refresh()
 
     def newGame(self):
         '''Queries the client if there is already a current game in 
         progress, if not generates a new game model and a game
         widget to hold it.
         '''
+        self.client.setPlayerTarget('')
         self.playerSelect = PlayerQuery(self.client)
         self.playerSelect.exec_()
         #Check if the client has a selected player
         player = self.client.getPlayerTarget()
         if player:
             #We can create a game.
-            self.gamemodel = GameModel()
-            self.gameWidget = GameTab(self.client, self.gamemodel)
+            print('Starting a game with ' + player)
+            self.gamemodel = GameModel(self.client)
+            self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
             self.gameWidget.signals.finished.connect(self.returnToMain)
             self.setCentralWidget(self.gameWidget)
             #Now that the main widget has been reset all panel items
