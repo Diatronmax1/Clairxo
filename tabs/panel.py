@@ -32,7 +32,7 @@ class HomeScreen(QWidget):
         if name:
             self.userName.setText(name[:-1])
         else:
-            self.statusbar.showMessage('Set User in the options')
+            self.statusbar.showMessage('Set User in the Options')
         userBox = QWidget()
         layout = QHBoxLayout(userBox)
         layout.addWidget(label)
@@ -96,8 +96,11 @@ class HomeScreen(QWidget):
 
     def startNewGame(self):
         if self.client.getUserName():
-            self.statusbar.showMessage('Starting new game!')
-            self.signals.newGame.emit()
+            if self.client.getOnlinePlayers():
+                self.statusbar.showMessage('Starting new game!')
+                self.signals.newGame.emit()
+            else:
+                self.statusbar.showMessage('No online players to play with :(')
         else:
             self.statusbar.showMessage('Setup username first!')
 
