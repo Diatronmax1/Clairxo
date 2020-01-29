@@ -10,6 +10,7 @@ class Client():
         self.cfgfile = 'lib/cfg/cfg.tp'
         self.config = None
         self.playerTarget = None
+        self.invites = {}
         self.load()
 
     def load(self):
@@ -36,6 +37,9 @@ class Client():
         #Now that the config file has been loaded in the 
         #remaining functions are guranteed to have a self.config
         #available.
+
+    def getInvites(self):
+        return self.invites
 
     def startNewGame(self):
         pass
@@ -73,6 +77,11 @@ class Client():
 
     def getPlayerTarget(self):
         return self.playerTarget
+
+    def alertPlayer(self, savefile):
+        tp = self.config.getTransferPath()
+        with open(tp, 'a+') as tfile:
+            tfile.write(self.playerTarget[:-1] + '-' + savefile + '\n')
 
     def goOffline(self):
         print('Going offline')
@@ -116,6 +125,16 @@ class Client():
                         slink.write(player)
         else:
             print('Did not connect to server!')
+        #Check invites
+        ip = self.config.getTransferPath()
+        self.invites = {}
+        if os.path.exists(ip):
+            with open(ip, 'r') as tfile:
+                for line in tfile:
+                    if line.startswith(name[:-1]):
+                        #Game invite exits
+                        name, gamepath = line.split('-')
+                        self.invites[os.path.basename(gamepath).split('.')[0]] = gamepath
 
     def reset(self):
         self.currentState = self.states[0]

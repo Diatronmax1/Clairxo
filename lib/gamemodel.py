@@ -47,5 +47,6 @@ class GameModel():
         while os.path.exists(savefile + '.gtp'):
             count += 1
             savefile = savefile[:-1] + str(count)
+        self.client.alertPlayer(savefile + '.gtp')
         with open(savefile + '.gtp', 'wb') as gfile:
             pickle.dump(self, gfile)

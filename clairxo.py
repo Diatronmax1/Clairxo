@@ -69,6 +69,14 @@ class Clairxo(QMainWindow):
         super().__init__()
         self.threadpool = QThreadPool()
         self.client = Client()
+        #Set up remaining animations
+        self.createHomePanel()
+        self.setCentralWidget(self.mainwindow)
+        self.setWindowTitle('CLAIRXO')
+        self.setGeometry(650, 200, 600, 600)
+        self.show()
+
+    def createHomePanel(self):
         self.mainwindow = HomeScreen(self.client, self.statusBar())
         self.mainwindow.signals.newGame.connect(self.newGame)
         self.client.connect()
@@ -76,11 +84,6 @@ class Clairxo(QMainWindow):
         self.monitor = ClientMonitor(self.client)
         self.monitor.signals.notify.connect(self.refresh)
         self.threadpool.start(self.monitor)
-        #Set up remaining animations
-        self.setCentralWidget(self.mainwindow)
-        self.setWindowTitle('CLAIRXO')
-        self.setGeometry(650, 200, 600, 600)
-        self.show()
 
     def refresh(self):
         if self.mainwindow:
@@ -108,13 +111,12 @@ class Clairxo(QMainWindow):
             self.mainwindow = None
             self.monitor.end()
 
+    def loadGame(self):
+        print('loading game')
+
     def returnToMain(self):
         #Create all the panel widgets again and reconnect the signals
-        self.mainwindow = HomeScreen(self.client, self.statusBar())
-        self.mainwindow.signals.newGame.connect(self.newGame)
-        self.monitor = ClientMonitor(self.client)
-        self.monitor.signals.notify.connect(self.refresh)
-        self.threadpool.start(self.monitor)
+        self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
         #Delete all the old game information
         self.gamemodel = None

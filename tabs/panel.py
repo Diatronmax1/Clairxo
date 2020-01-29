@@ -40,34 +40,48 @@ class HomeScreen(QWidget):
         startNewBut.clicked.connect(self.startNewGame)
         resumeBut = QPushButton('Resume Game')
         resumeBut.clicked.connect(self.loadGame)
+        invites = self.client.getInvites()
+        if invites:
+            self.inviteBut = QPushButton('Invites Available!')
+        else:
+            self.inviteBut = QPushButton('No invites :(')
+        self.inviteBut.clicked.connect(self.viewInvites)
         optionsBut = QPushButton('Options')
         optionsBut.clicked.connect(self.setOptions)
         self.playerList = QListWidget()
         layout = QGridLayout(self)
         layout.setRowStretch(0, 2)
-        layout.setRowStretch(7, 2)
+        layout.setRowStretch(8, 2)
+        layout.setColumnStretch(0, 2)
+        layout.setColumnStretch(2, 2)
         layout.addWidget(QLabel('\t'),                  0, 0, 1, 2)
         layout.addWidget(userBox,                       1, 1)
-        layout.addWidget(QLabel('\t'),                  2, 0)
+        #layout.addWidget(QLabel('\t'),                  2, 0)
         layout.addWidget(startNewBut,                   2, 1)
-        layout.addWidget(QLabel('\t'),                  2, 2)
-        layout.addWidget(QLabel('\t'),                  3, 0)
+        #layout.addWidget(QLabel('\t'),                  2, 2)
+        #layout.addWidget(QLabel('\t'),                  3, 0)
         layout.addWidget(resumeBut,                     3, 1)
-        layout.addWidget(QLabel('\t'),                  3, 2)
-        layout.addWidget(QLabel('\t'),                  4, 0)
-        layout.addWidget(optionsBut,                    4, 1)
-        layout.addWidget(QLabel('\t'),                  4, 2)
+        layout.addWidget(self.inviteBut,                4, 1)
+        #layout.addWidget(QLabel('\t'),                  3, 2)
+        #layout.addWidget(QLabel('\t'),                  4, 0)
+        layout.addWidget(optionsBut,                    5, 1)
+        #layout.addWidget(QLabel('\t'),                  4, 2)
         label = QLabel('Online Players')
         label.setStyleSheet('background-color:white')
-        layout.addWidget(label,                         5, 1)
-        layout.addWidget(self.playerList,               6, 1)
-        layout.addWidget(QLabel('\t'),                  7, 0, 1, 3)
+        layout.addWidget(label,                         6, 1)
+        layout.addWidget(self.playerList,               7, 1)
+        layout.addWidget(QLabel('\t'),                  8, 0, 1, 3)
         
     def refresh(self):
         self.playerList.clear()
         players = self.client.getOnlinePlayers()
         for player in players:
             self.playerList.addItem(player[:-1])
+        invites = self.client.getInvites()
+        if invites:
+            self.inviteBut.setText('Invites Available!')
+        else:
+            self.inviteBut.setText('No invites :(')
 
     def resizeEvent(self, event):
         newmap = self.image.scaled(self.width(), self.height())
@@ -75,9 +89,15 @@ class HomeScreen(QWidget):
         p.setBrush(self.backgroundRole(), QBrush(newmap))
         self.setPalette(p)
 
+    def viewInvites(self):
+        print(self.client.getInvites())
+
     def startNewGame(self):
-        self.statusbar.showMessage('Starting new game!')
-        self.signals.newGame.emit()
+        if self.client.getUserName():
+            self.statusbar.showMessage('Starting new game!')
+            self.signals.newGame.emit()
+        else:
+            self.statusbar.showMessage('Setup username first!')
 
     def loadGame(self):
         self.statusbar.showMessage('Loading game from server')
