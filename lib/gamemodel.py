@@ -59,7 +59,7 @@ class GameModel():
                 if row==1 or row==self.maxrows or col==1 or col==self.maxcols:
                     edge = True
                 self.cubes[row][col] = Cube(row, col, edge)
-        self.states = ['X', 'Y']
+        self.states = ['X', 'O']
         self.state = self.states[0]
         self.turnCount = 0
         self.dropPoints = []
@@ -165,7 +165,7 @@ class GameModel():
         return self.gameover
 
     def checkIfWon(self):
-        '''Checks for rows, cols, or diaganols full of X's or Y's'''
+        '''Checks for rows, cols, or diaganols full of X's or O's'''
         print('Checking Win')
         xwon = False
         ywon = False
@@ -236,7 +236,7 @@ class GameModel():
                 return 'X'
         else:
             if ywon:
-                return 'Y'
+                return 'O'
 
 
     def getCubes(self):

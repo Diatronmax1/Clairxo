@@ -332,7 +332,7 @@ class GameTab(QWidget):
                 else:
                     self.winCondition(False)
                 return
-            elif winner == 'Y':
+            elif winner == 'O':
                 if username == self.gamemodel.getPlayerOne():
                     self.winCondition(False)
                 else:
