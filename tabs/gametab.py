@@ -278,7 +278,9 @@ class GameTab(QWidget):
             self.gamemodel = pickle.load(gfile)
         for cube in self.cubes:
             cube.setGameCube(self.gamemodel.getCube(cube.x, cube.y))
-        self.refresh()
+            cube.reset()
+        for square in self.squares:
+            square.reset()
 
     def reset(self):
         self.gamemodel.reset()
