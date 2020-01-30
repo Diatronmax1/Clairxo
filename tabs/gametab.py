@@ -235,6 +235,7 @@ class GameTab(QWidget):
         self.client = client
         self.gamemodel = gamemodel
         self.statusbar = statusbar
+        self.gameMonitor = None
         if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
             self.statusbar.showMessage('Your Turn!')
         else:
@@ -274,7 +275,7 @@ class GameTab(QWidget):
                     elif idx == maxrows+1 and idy == maxcols+1:
                         continue
                     else:
-                        newSquare = SquareWidget(self.client, self.gamemodel, idx, idy, maxrows+2, maxcols+2)
+                        newSquare = SquareWidget(self.client, self.gamemodel, idx, idy, maxrows+1, maxcols+1)
                         newSquare.signals.receievedCube.connect(self.queueDrop)
                         newSquare.signals.pickedUp.connect(self.pickedUp)
                         self.squares.append(newSquare)
@@ -295,7 +296,7 @@ class GameTab(QWidget):
         for square in self.squares:
             square.setGameModel(self.gamemodel)
             square.reset()
-        self.pingUser()
+        #self.pingUser()
         self.refresh()
 
     def pingUser(self):
