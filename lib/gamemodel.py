@@ -235,7 +235,8 @@ class GameModel():
             else:
                 return 'X'
         else:
-            return 'Y'
+            if ywon:
+                return 'Y'
 
 
     def getCubes(self):
