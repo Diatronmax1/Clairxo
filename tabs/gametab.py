@@ -320,11 +320,12 @@ class GameTab(QWidget):
     def refresh(self):
         #If its your turn we can turn off the game monitor
         if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
-            self.statusbar.showMessage('Your Turn!')
-        else:
             if self.gamemodel.gameOver():
                 self.winCondition(False)
                 return
+            else:
+                self.statusbar.showMessage('Your Turn!')
+        else:
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
         for row in self.cubes:
             for cube in row:
