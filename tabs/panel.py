@@ -55,7 +55,7 @@ class InviteQuery(QDialog):
         self.msgBar = QLabel('')
         invites = self.client.getInvites()
         for invite in invites:
-            self.inviteList.addItem(player[:-1])
+            self.inviteList.addItem(invite[:-1])
         self.inviteList.itemClicked.connect(self.setInviteTarget)
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel('Select a player'))

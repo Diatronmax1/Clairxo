@@ -4,7 +4,6 @@ from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject, QThreadPool, QRunna
 from PyQt5.QtWidgets import (QMainWindow, QAction, QApplication, qApp, QLabel, QFileDialog,
                              QTabWidget, QWidget, QVBoxLayout, QListWidget, QDialog, QPushButton)
 import sys
-
 from client import Client
 from lib.gamemodel import GameModel
 from tabs.gametab import GameTab

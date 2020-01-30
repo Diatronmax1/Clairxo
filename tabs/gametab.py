@@ -9,11 +9,28 @@ import pickle
 
 class WorkerSignals(QObject):
     finished = pyqtSignal()
+    notify = pyqtSignal()
 
 class ButtonSignals(QObject):
     pickedUp = pyqtSignal(object)
     receievedCube = pyqtSignal(int, int)
     cancelSelection = pyqtSignal()
+
+class GameMonitor(QRunnable):
+    def __init__(self, client, *args, **kwargs):
+        super().__init__()
+        self.signals = WorkerSignals()
+        self.client = client
+        self.working = True
+
+    def run(self):
+        self.working = True
+        while self.working:
+            time.sleep(1)
+            self.signals.notify.emit()
+
+    def end(self):
+        self.working = False
 
 class SquareWidget(QPushButton):
     '''Squares are initially blank but can receive cubes
@@ -202,6 +219,7 @@ class CubeWidget(QPushButton):
 class GameTab(QWidget):
     def __init__(self, client, gamemodel, statusbar):
         super().__init__()
+        self.threadpool = QThreadPool()
         self.client = client
         self.gamemodel = gamemodel
         self.statusbar = statusbar
@@ -273,6 +291,7 @@ class GameTab(QWidget):
 
     def passTurn(self):
         '''Should clear the squares of their cubes and move the turn'''
+        
         for square in self.squares:
             square.reset()
         for cube in self.cubes:
