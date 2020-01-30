@@ -164,6 +164,7 @@ class CubeWidget(QPushButton):
         picked up
         '''
         if e.buttons() != Qt.RightButton or not self.gamecube.edge:
+            print('Edge Cube?: ' + str(self.gamecube.edge))
             return
         #Make sure there arent picked up cubes already on the board
         pc = self.gamemodel.getPickedUpCube()
@@ -184,6 +185,8 @@ class CubeWidget(QPushButton):
                 return
         #Ensure you can be playing right now
         if self.client.getUserName() != self.gamemodel.getCurrentPlayer():
+            print('You: ' + self.client.getUserName())
+            print('Them: ' + self.gamemodel.getCurrentPlayer())
             return
         self.gamecube.setState(self.gamemodel.getState())
         self.signals.pickedUp.emit(self.gamecube)
@@ -358,4 +361,6 @@ class GameTab(QWidget):
         self.passTurnBut.setEnabled(True)
 
     def endGame(self):
+        if self.gameMonitor:
+            self.gameMonitor.end()
         self.signals.finished.emit()

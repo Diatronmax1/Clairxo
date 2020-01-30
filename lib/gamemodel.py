@@ -15,6 +15,9 @@ class Cube():
         self.oldstate = self.state
         self.state = state
 
+    def setEdge(self, state=True):
+        self.edge = state
+
     def getState(self):
         return self.state
 
@@ -47,7 +50,7 @@ class GameModel():
         for x in range(1, 7):
             for y in range(1, 7):
                 edge = False
-                if x == 1 or x==6 or y==1 or y==6:
+                if x==1 or x==6 or y==1 or y==6:
                     edge = True
                 self.cubes[x][y] = Cube(x, y, edge)
         self.states = ['X', 'Y']
@@ -143,6 +146,7 @@ class GameModel():
         self.pickedUpCube = None
         self.droppedPoint = None
         self.currentPlayer = self.players[self.turnCount%2]
+        print('New Player: ' + self.currentPlayer)
         self.save()
         return self.checkIfWon()
 
