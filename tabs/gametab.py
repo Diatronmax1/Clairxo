@@ -227,6 +227,9 @@ class GameTab(QWidget):
             self.statusbar.showMessage('Your Turn!')
         else:
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
+            self.gameMonitor = GameMonitor(self.client)
+            self.gameMonitor.signals.notify.connect(self.reloadGame)
+            self.threadpool.start(self.gameMonitor)
         self.signals = WorkerSignals()
         self.passTurnBut = QPushButton('Accept and Pass Turn')
         self.passTurnBut.setEnabled(False)
@@ -234,8 +237,6 @@ class GameTab(QWidget):
         self.endgamebut = QPushButton('End Game')
         self.endgamebut.clicked.connect(self.endGame)
         #Development
-        self.refreshBut = QPushButton('Refresh')
-        self.refreshBut.clicked.connect(self.reloadGame)
         gameArea = QWidget()
         layout = QGridLayout(gameArea)
         #Make the outer layer of Squares
@@ -269,7 +270,6 @@ class GameTab(QWidget):
         layout.addWidget(gameArea)
         layout.addWidget(self.passTurnBut)
         layout.addWidget(self.endgamebut)
-        layout.addWidget(self.refreshBut)
         self.setAcceptDrops(True)
 
     def reloadGame(self):
@@ -288,6 +288,12 @@ class GameTab(QWidget):
             cube.reset()
 
     def refresh(self):
+        #If its your turn we can turn off the game monitor
+        if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
+            self.statusbar.showMessage('Your Turn!')
+            self.gameMonitor.end()
+        else:
+            self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
         for cube in self.cubes:
             cube.refresh()
         for square in self.squares:
@@ -295,6 +301,7 @@ class GameTab(QWidget):
 
     def passTurn(self):
         '''Should clear the squares of their cubes and move the turn'''
+        self.passTurnBut.setEnabled(False)
         for square in self.squares:
             square.reset()
         for cube in self.cubes:
@@ -305,9 +312,11 @@ class GameTab(QWidget):
             self.endGame()
         else:
             self.statusbar.showMessage('Other Players Turn!')
-        self.refresh()
-        self.passTurnBut.setEnabled(False)
-
+        #Spawn the monitor
+        self.gameMonitor = GameMonitor(self.client)
+        self.gameMonitor.signals.notify.connect(self.reloadGame)
+        self.threadpool.start(self.gameMonitor)
+        
     def pickedUp(self, gamecube):
         print('Picked Up: ' + str(gamecube))
         dropPoints = self.gamemodel.updateDrops(gamecube)
