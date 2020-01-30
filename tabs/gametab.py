@@ -279,16 +279,20 @@ class GameTab(QWidget):
 
     def reloadGame(self):
         currentGame = self.client.getCurrentGame()
-        with open(currentGame, 'rb') as gfile:
-            self.gamemodel = pickle.load(gfile)
-        for idx, row in enumerate(self.gamemodel.getCubes()):
-            for idy, gamecube in enumerate(row):
-                if gamecube is not None:
-                    self.cubes[idx][idy].setGameCube(gamecube)
-                    self.cubes[idx][idy].reset()
-        for square in self.squares:
-            square.reset()
-        self.refresh()
+        try:
+            with open(currentGame, 'rb') as gfile:
+                self.gamemodel = pickle.load(gfile)
+            for idx, row in enumerate(self.gamemodel.getCubes()):
+                for idy, gamecube in enumerate(row):
+                    if gamecube is not None:
+                        self.cubes[idx][idy].setGameCube(gamecube)
+                        self.cubes[idx][idy].reset()
+            for square in self.squares:
+                square.reset()
+            self.refresh()
+        except:
+            #Sometimes may read at the same time as a save
+            pass
 
     def reset(self):
         self.gamemodel.reset()
@@ -326,7 +330,8 @@ class GameTab(QWidget):
         for row in self.cubes:
             for cube in row:
                 if cube:
-                    cube.deSelect()
+                    cube.reset()
+        print('Current player: ' + self.gamemodel.getCurrentPlayer())
         self.gameMonitor = GameMonitor(self.client)
         self.gameMonitor.signals.notify.connect(self.reloadGame)
         self.threadpool.start(self.gameMonitor)

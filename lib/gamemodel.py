@@ -146,9 +146,8 @@ class GameModel():
         self.pickedUpCube = None
         self.droppedPoint = None
         self.currentPlayer = self.players[self.turnCount%2]
-        print('New Player: ' + self.currentPlayer)
         self.save()
-        return self.checkIfWon()
+        return False #self.checkIfWon()
 
     def checkIfWon(self):
         '''Checks for rows, cols, or diaganols full of X's or Y's'''
