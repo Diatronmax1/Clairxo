@@ -255,8 +255,8 @@ class GameTab(QWidget):
         #Make the outer layer of Squares
         self.squares = []
         self.cubes = np.ndarray(shape=(8,8), dtype=object)
-        maxrows = self.gamemodel.maxrows
-        maxcols = self.gamemodel.maxcols
+        maxrows = self.gamemodel.maxwidth
+        maxcols = self.gamemodel.maxwidth
         for idx, row in enumerate(self.gamemodel.getCubes()):
             for idy, gamecube in enumerate(row):
                 if gamecube is not None:
@@ -320,28 +320,14 @@ class GameTab(QWidget):
     def refresh(self):
         #If its your turn we can turn off the game monitor
         username = self.client.getUserName()
-        if username == self.gamemodel.getCurrentPlayer():
-            winner = self.gamemodel.gameOver()
-            print(winner)
-            if winner == 'Tie!':
+        winner = self.gamemodel.gameOver()
+        if winner:
+            if winner == username:
+                self.winCondition(True)
+            elif winner == 'Tie!':
                 self.winCondition(False, True)
-                return
-            elif winner == 'X':
-                if username == self.gamemodel.getPlayerOne():
-                    self.winCondition(True)
-                else:
-                    self.winCondition(False)
-                return
-            elif winner == 'O':
-                if username == self.gamemodel.getPlayerOne():
-                    self.winCondition(False)
-                else:
-                    self.winCondition(True)
-                return
             else:
-                self.statusbar.showMessage('Your Turn!')
-        else:
-            self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
+                self.winCondition(False)
         for row in self.cubes:
             for cube in row:
                 if cube:
@@ -352,7 +338,7 @@ class GameTab(QWidget):
     def passTurn(self):
         '''Should clear the squares of their cubes and move the turn'''
         self.passTurnBut.setEnabled(False)
-        won = self.gamemodel.passTurn()
+        self.gamemodel.passTurn()
         #Spawn the monitor
         for square in self.squares:
             square.reset()

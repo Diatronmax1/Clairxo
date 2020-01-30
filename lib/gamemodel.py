@@ -50,13 +50,12 @@ class GameModel():
         #Starting configuration is a 5x5 grid of cubes all incremented by 1
         #so that top left is (1, 1), top right is (1, 6), bot left is (6, 1)
         #and bot right is (6, 6)
-        self.maxrows = 5
-        self.maxcols = 5
-        self.cubes = np.ndarray(shape=(self.maxrows+2,self.maxcols+2), dtype=object)
-        for row in range(1, self.maxrows+1):
-            for col in range(1, self.maxcols+1):
+        self.maxwidth = 5
+        self.cubes = np.ndarray(shape=(self.maxwidth+2,self.maxwidth+2), dtype=object)
+        for row in range(1, self.maxwidth+1):
+            for col in range(1, self.maxwidth+1):
                 edge = False
-                if row==1 or row==self.maxrows or col==1 or col==self.maxcols:
+                if row==1 or row==self.maxwidth or col==1 or col==self.maxwidth:
                     edge = True
                 self.cubes[row][col] = Cube(row, col, edge)
         self.states = ['X', 'O']
@@ -125,17 +124,17 @@ class GameModel():
                 self.cubes[row+1][startCol].setState(cube.getState())
             #Then row 1 needs the new game state added to its cube
             self.cubes[1][startCol].setState(self.state)
-        elif startRow == self.maxrows+1:
+        elif startRow == self.maxwidth+1:
             #Bottom row, shift up
             print('Up Shift')
             #Start with right below the picked up cubes location
             #and move that state into where the picked up cube was
             #cascade down to the bottom.
-            for row in range(pRow+1, self.maxrows+1):
+            for row in range(pRow+1, self.maxwidth+1):
                 cube = self.cubes[row][startCol]
                 self.cubes[row-1][startCol].setState(cube.getState())
             #Then row 6 needs the new game state added to its cube
-            self.cubes[self.maxrows][startCol].setState(self.state)
+            self.cubes[self.maxwidth][startCol].setState(self.state)
         elif startCol == 0:
             #Left row shift right
             print('Right Shift')
@@ -149,23 +148,23 @@ class GameModel():
                 self.cubes[startRow][col+1].setState(cube.getState())
             #Finally put the cube on the left edge to the game state
             self.cubes[startRow][1].setState(self.state)
-        elif startCol == self.maxcols+1:
+        elif startCol == self.maxwidth+1:
             #Right row shift left
             print('Left Shift')
             #Start with the one to the right of the picked up cube
             #and move its value to the picked up cube
             #cascade to the right
-            for col in range(pCol+1, self.maxcols+1):
+            for col in range(pCol+1, self.maxwidth+1):
                 cube = self.cubes[startRow][col]
                 self.cubes[startRow][col-1].setState(cube.getState())
             #Finally put the cube on the right to the game state
-            self.cubes[startRow][self.maxcols].setState(self.state)
+            self.cubes[startRow][self.maxwidth].setState(self.state)
         self.turnCount += 1
         self.state = self.states[self.turnCount%2]
         self.pickedUpCube = None
         self.droppedPoint = None
         self.currentPlayer = self.players[self.turnCount%2]
-        #self.gameover = self.checkIfWon()
+        self.gameover = self.checkIfWon()
         self.save()
         return self.gameover
 
@@ -174,74 +173,90 @@ class GameModel():
         print('Checking Win')
         xwon = False
         ywon = False
-        for row in range(1, self.maxrows+1):
-            startCube = self.cubes[row][1]
-            if startCube:
-                state = startCube.getState()
-                if state:
-                    for col in range(1, self.maxcols+1):
-                        cube = self.cubes[row][col]
-                        if not cube.compareState(startCube):
-                            break
-                    else:
-                        #Won on a row!
-                        if state == 'X':
-                            xwon = True
-                        else:
-                            ywon = True
-        for col in range(1, self.maxcols+1):
-            startCube = self.cubes[1][col]
-            if startCube:
-                state = startCube.getState()
-                if state:
-                    for row in range(1, self.maxrows+1):
-                        cube = self.cubes[row][col]
-                        if not cube.compareState(startCube):
-                            break
-                    else:
-                        #Won on a column!
-                        if state == 'X':
-                            xwon = True
-                        else:
-                            ywon = True
-        #Diaganol Check
-        startcube = self.cubes[1][1]
-        if startcube:
-            state = startCube.getState()
+        #Check from row 1 to maxwidth
+        for row in range(1, self.maxwidth+1):
+            #Grab the first cube in the row's state
+            state = self.cubes[row][1].getState()
+            #If its none don't check the row, its not full yet
             if state:
-                for diag in range(1, self.maxrows+1):
-                    cube = self.cubes[diag][diag]
-                    if not cube.compareState(startcube):
+                #Go through each cube in the row not including the first
+                #and see if its the same
+                #2 to maxwidth
+                for col in range(2, self.maxwidth+1):
+                    #Get the state of that cube
+                    colstate = self.cubes[row][col].getState()
+                    if state != colstate:
+                        #Dont continue this row doesnt have all of the 
+                        #same sate
                         break
+                #If we reached the end and didnt break it was a full
+                #row of the same
                 else:
-                    #Won a diaganol
+                    #Won on a row!
                     if state == 'X':
                         xwon = True
                     else:
                         ywon = True
-        startcube = self.cubes[self.maxrows][1]
-        if startcube:
-            state = startCube.getState()
+        #Check from column 1 through maxwidth
+        for col in range(1, self.maxwidth+1):
+            #Grab the first cube in the rows state
+            startCube = self.cubes[1][col].getState()
+            #Verify the state is not None
             if state:
-                for diag in range(1, self.maxrows+1):
-                    cube = self.cubes[self.maxrows+1-diag][diag]
-                    if not cube.compareState(startcube):
+                #Go through each column not including the first
+                #and see if tis the same
+                for row in range(2, self.maxwidth+1):
+                    rowstate = self.cubes[row][col].getState()
+                    if state != rowstate::
                         break
+                #If you reach the end of a column and they're all the 
+                #same you won on a column
                 else:
-                    #Won a diagaonl
+                    #Won on a column!
                     if state == 'X':
                         xwon = True
                     else:
                         ywon = True
+        #Diagonol Check
+        state = self.cubes[1][1].getState()
+        #Check it isn't none
+        if state:
+            for diag in range(2, self.maxwidth+1):
+                diagstate = self.cubes[diag][diag].getState()
+                if state != diagstate:
+                    break
+            #If you reach the end of the diaganol and 
+            #they the same you won on a diaganol
+            else:
+                #Won a diaganol
+                if state == 'X':
+                    xwon = True
+                else:
+                    ywon = True
+        #Start from bottom left
+        state = self.cubes[self.maxwidth][1].getState()
+        if state:
+            for diag in range(2, self.maxwidth+1):
+                diagstate = self.cubes[self.maxwidth+1-diag][diag].getState()
+                if state != diagstate:
+                    break
+            else:
+                #Won a diagaonl
+                if state == 'X':
+                    xwon = True
+                else:
+                    ywon = True
         #Now that we have who may have won we need to set the winner or not
         if xwon:
             if ywon:
                 return 'Tie!'
             else:
-                return 'X'
+                return self.players[0]
         else:
             if ywon:
-                return 'O'
+                return self.players[1]
+            else:
+                return None
 
 
     def getCubes(self):
@@ -277,8 +292,8 @@ class GameModel():
         self.pickedUpCube = gamecube
         self.dropPoints.clear()
         north = 0
-        south = self.maxrows+1
-        east = self.maxcols+1
+        south = self.maxwidth+1
+        east = self.maxwidth+1
         west = 0
         row, col = gamecube.getPos()
         if row == 1:
@@ -287,20 +302,20 @@ class GameModel():
             if col == 1:
                 #North West Corner
                 self.dropPoints.append((row, east))
-            elif col == self.maxcols:
+            elif col == self.maxwidth:
                 #North East Corner
                 self.dropPoints.append((row, west))
             else:
                 #Northern Edge
                 self.dropPoints.append((row, west))
                 self.dropPoints.append((row, east))
-        elif row == self.maxrows:
+        elif row == self.maxwidth:
             #On a southern edge
             self.dropPoints.append((north, col))
             if col == 1:
                 #South West Corner
                 self.dropPoints.append((row, east))
-            elif col == self.maxcols:
+            elif col == self.maxwidth:
                 #South East Corner
                 self.dropPoints.append((row, west))
             else:
@@ -313,7 +328,7 @@ class GameModel():
                 self.dropPoints.append((row, east))
                 self.dropPoints.append((north, col))
                 self.dropPoints.append((south, col))
-            elif col == self.maxcols:
+            elif col == self.maxwidth:
                 #Eastern Edge
                 self.dropPoints.append((row, west))
                 self.dropPoints.append((north, col))
