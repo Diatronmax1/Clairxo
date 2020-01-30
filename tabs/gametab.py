@@ -203,8 +203,7 @@ class CubeWidget(QPushButton):
         self.style()
 
     def dropEvent(self, e):
-        '''Intent of dropping on a cube must be to cancel the move
-        '''
+        '''Intent of dropping on a cube must be to cancel the move'''
         self.selected = False
         self.signals.cancelSelection.emit()
         self.style()
@@ -242,14 +241,14 @@ class GameTab(QWidget):
         #Make the outer layer of Squares
         gamecubes = self.gamemodel.getCubes()
         self.squares = []
-        self.cubes = []
+        self.cubes = np.ndarray(shape=(8,8), dtype=object)
         for idx, row in enumerate(gamecubes):
             for idy, gamecube in enumerate(row):
                 if gamecube is not None:
                     newCube = CubeWidget(self.client, self.gamemodel, gamecube)
                     newCube.signals.pickedUp.connect(self.pickedUp)
                     newCube.signals.cancelSelection.connect(self.cancelMove)
-                    self.cubes.append(newCube)
+                    self.cubes[idx][idy] = newCube
                     layout.addWidget(newCube, gamecube.x, gamecube.y)
                 else:
                     if idx == 0 and idy == 0:
@@ -276,9 +275,11 @@ class GameTab(QWidget):
         currentGame = self.client.getCurrentGame()
         with open(currentGame, 'rb') as gfile:
             self.gamemodel = pickle.load(gfile)
-        for cube in self.cubes:
-            cube.setGameCube(self.gamemodel.getCube(cube.x, cube.y))
-            cube.reset()
+        for idx, row in enumerate(self.gamemodel.getCubes()):
+            for idy, gamecube in enumerate(row):
+                if gamecube is not None:
+                    self.cubes[idx][idy].setGameCube(gamecube)
+                    self.cubes[idx][idy].reset()
         for square in self.squares:
             square.reset()
 
@@ -286,8 +287,10 @@ class GameTab(QWidget):
         self.gamemodel.reset()
         for square in self.squares:
             square.reset()
-        for cube in self.cubes:
-            cube.reset()
+        for row in self.cubes:
+            for cube in row:
+                if cube:
+                    cube.reset()
 
     def refresh(self):
         #If its your turn we can turn off the game monitor
@@ -296,8 +299,10 @@ class GameTab(QWidget):
             self.gameMonitor.end()
         else:
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
-        for cube in self.cubes:
-            cube.refresh()
+        for row in self.cubes:
+            for cube in row:
+                if cube:
+                    cube.refresh()
         for square in self.squares:
             square.refresh()
 
@@ -306,8 +311,10 @@ class GameTab(QWidget):
         self.passTurnBut.setEnabled(False)
         for square in self.squares:
             square.reset()
-        for cube in self.cubes:
-            cube.deSelect()
+        for row in self.cubes:
+            for cube in row:
+                if cube:
+                    cube.deSelect()
         won = self.gamemodel.passTurn()
         if won:
             self.statusbar.showMessage('You Win!')
@@ -336,8 +343,10 @@ class GameTab(QWidget):
             for square in self.squares:
                 if point[0] == square.x and point[1] == square.y:
                     square.setValidDrop(False)
-        for cube in self.cubes:
-            cube.deSelect()
+        for row in self.cubes:
+            for cube in row:
+                if cube:
+                    cube.deSelect()
         self.refresh()
         
     def queueDrop(self, x, y):

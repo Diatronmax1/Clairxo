@@ -88,13 +88,6 @@ class GameModel():
     def getDroppedPoint(self):
         return self.droppedPoint
 
-    def getCube(self, x, y):
-        for row in self.cubes:
-            for cube in row:
-                if cube:
-                    if x == cube.x and y == cube.y:
-                        return cube
-
     def passTurn(self):
         #Move the dropped block into the grid shifting all of the cubes.
         print('Shifting ' + str(self.droppedPoint) + ' into grid')
