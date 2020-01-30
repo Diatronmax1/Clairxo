@@ -160,6 +160,7 @@ class GameModel():
         self.droppedPoint = None
         self.currentPlayer = self.players[self.turnCount%2]
         self.gameover = self.checkIfWon()
+        print(self.gameover)
         self.save()
         return self.gameover
 
