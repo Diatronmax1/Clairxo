@@ -2,7 +2,7 @@
 #Author Chris Lambert
 from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject, QThreadPool, QRunnable
 from PyQt5.QtWidgets import (QMainWindow, QAction, QApplication, qApp, QLabel, QFileDialog,
-                             QTabWidget, QWidget, QVBoxLayout, QListWidget, QDialog, QPushButton)
+                             QTabWidget, QWidget, QMessageBox, QVBoxLayout, QListWidget, QDialog, QPushButton)
 import sys
 from client import Client
 from lib.gamemodel import GameModel
@@ -40,8 +40,16 @@ class Clairxo(QMainWindow):
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
         self.setWindowTitle('CLAIRXO')
-        self.setGeometry(600, 100, 800, 800)
+        self.setGeometry(625, 100, 750, 750)
         self.startMonitor()
+        #Set up action bar
+        tutorialAct = QAction('Tutorial', self)
+        tutorialAct.setStatusTip('Launch Tutorial Mode for this program')
+        tutorialAct.setShortcut('Ctrl+t')
+        tutorialAct.triggered.connect(self.launchTutorial)
+        menubar = self.menuBar()
+        helpMenu = menubar.addMenu('Help')
+        helpMenu.addAction(tutorialAct)
         self.show()
 
     def createHomePanel(self):
@@ -58,6 +66,23 @@ class Clairxo(QMainWindow):
     def refresh(self):
         if self.mainwindow:
             self.mainwindow.refresh()
+
+    def launchTutorial(self):
+        msgWidget = QMessageBox()
+        msgWidget.setIcon(QMessageBox.Information)
+        msg = 'Welcome to Quixo!\n'
+        msg += 'You can pick up any red edge block by right clicking and dragging\n'
+        msg += 'You are only allowed to pick up a blank, or your own block\n'
+        msg += 'Move the block to any of the outer blocks that are now highlighted green\n'
+        msg += 'Release to drop your block onto the outer square. This will ready the block to be moved\n'
+        msg += 'If you are happy with your move, press accept and pass turn to move it to the next turn\n'
+        msg += 'After placing a block it can be picked up again and put in any other green space\n'
+        msg += 'Move the block back to the starting block to cancel that move\n'
+        msg += 'Goal is to get 5 in a row in either a row, column or diaganol\n'
+        msgWidget.setText(msg)
+        msgWidget.setWindowTitle('Tutorial')
+        msgWidget.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgWidget.exec_()
 
     def newGame(self, player):
         '''Queries the client if there is already a current game in 

@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject, QThreadPool, QRunna
 from PyQt5.QtGui import QDrag, QPixmap, QPalette, QBrush
 from PyQt5.QtWidgets import (QFileDialog, QGridLayout, QGroupBox, QHBoxLayout, QInputDialog, 
                              QLabel, QListWidget, QListWidgetItem, QLineEdit, QPushButton, QProgressBar, 
-                             QRadioButton, QTextEdit, QVBoxLayout, QWidget)
+                             QRadioButton, QTextEdit, QVBoxLayout, QMessageBox, QWidget)
 import time
 import numpy as np
 import pickle
@@ -45,7 +45,7 @@ class SquareWidget(QPushButton):
     block from the square into the game
     They also are a visual indicator of the valid drop sites
     that a cube can be placed'''
-    def __init__(self, client, gamemodel, x, y):
+    def __init__(self, client, gamemodel, x, y, maxX, maxY):
         super().__init__()
         self.client = client
         self.gamemodel = gamemodel
@@ -56,24 +56,26 @@ class SquareWidget(QPushButton):
         self.validDrop = False
         self.x = x
         self.y = y
+        self.maxX = maxX
+        self.maxY = maxY
         self.style()
 
     def setGameModel(self, gamemodel):
         self.gamemodel = gamemodel
 
-    def style(self, background='blue', font='22pt Times New Roman'):
+    def style(self, background='blue', font='16pt Times New Roman'):
         if self.gamecube:
             name = self.gamemodel.getState()
-            if self.x == 0 and (self.y != 0 or self.y != 7):
+            if self.x == 0 and (self.y != 0 or self.y != self.maxY):
                 #Top Row, arrow should point down
                 self.setText(name + '\nv')
-            elif self.x == 7 and (self.y != 0 and self.y != 7):
+            elif self.x == self.maxX and (self.y != 0 and self.y != self.maxY):
                 #Bottom Row, arrow should point up
                 self.setText('^\n' + name)
             elif self.y == 0:
                 #Left edge, arrow should point right
                 self.setText(name + ' >')
-            elif self.y == 7:
+            elif self.y == self.maxY:
                 #Right edge arrow should point left
                 self.setText('< ' + name)
         else:
@@ -250,10 +252,11 @@ class GameTab(QWidget):
         gameArea = QWidget()
         layout = QGridLayout(gameArea)
         #Make the outer layer of Squares
-        gamecubes = self.gamemodel.getCubes()
         self.squares = []
         self.cubes = np.ndarray(shape=(8,8), dtype=object)
-        for idx, row in enumerate(gamecubes):
+        maxrows = self.gamemodel.maxrows
+        maxcols = self.gamemodel.maxcols
+        for idx, row in enumerate(self.gamemodel.getCubes()):
             for idy, gamecube in enumerate(row):
                 if gamecube is not None:
                     newCube = CubeWidget(self.client, self.gamemodel, gamecube)
@@ -264,14 +267,14 @@ class GameTab(QWidget):
                 else:
                     if idx == 0 and idy == 0:
                         continue
-                    elif idx == 7 and idy == 0:
+                    elif idx == maxrows+1 and idy == 0:
                         continue
-                    elif idx == 0 and idy == 7:
+                    elif idx == 0 and idy == maxcols+1:
                         continue
-                    elif idx == 7 and idy == 7:
+                    elif idx == maxrows+1 and idy == maxcols+1:
                         continue
                     else:
-                        newSquare = SquareWidget(self.client, self.gamemodel, idx, idy)
+                        newSquare = SquareWidget(self.client, self.gamemodel, idx, idy, maxrows+2, maxcols+2)
                         newSquare.signals.receievedCube.connect(self.queueDrop)
                         newSquare.signals.pickedUp.connect(self.pickedUp)
                         self.squares.append(newSquare)
@@ -292,7 +295,17 @@ class GameTab(QWidget):
         for square in self.squares:
             square.setGameModel(self.gamemodel)
             square.reset()
+        self.pingUser()
         self.refresh()
+
+    def pingUser(self):
+        msgWidget = QMessageBox()
+        msgWidget.setIcon(QMessageBox.Critical)
+        msg = 'Your move!'
+        msgWidget.setText(msg)
+        msgWidget.setWindowTitle('Alert')
+        msgWidget.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgWidget.exec_()
 
     def reset(self):
         self.gamemodel.reset()

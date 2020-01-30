@@ -44,16 +44,18 @@ class GameModel():
         self.client = client
         time = dt.datetime.now()
         self.filename = time.strftime("%d%m%Y") + self.players[0][:-1] + self.players[1][:-1]
-        self.cubes = np.ndarray(shape=(8,8), dtype=object)
         #Starting configuration is a 5x5 grid of cubes all incremented by 1
         #so that top left is (1, 1), top right is (1, 6), bot left is (6, 1)
         #and bot right is (6, 6)
-        for x in range(1, 7):
-            for y in range(1, 7):
+        self.maxrows = 5
+        self.maxcols = 5
+        self.cubes = np.ndarray(shape=(self.maxrows+2,self.maxcols+2), dtype=object)
+        for row in range(1, self.maxrows+1):
+            for col in range(1, self.maxcols+1):
                 edge = False
-                if x==1 or x==6 or y==1 or y==6:
+                if row==1 or row==self.maxrows or col==1 or col==self.maxcols:
                     edge = True
-                self.cubes[x][y] = Cube(x, y, edge)
+                self.cubes[row][col] = Cube(row, col, edge)
         self.states = ['X', 'Y']
         self.state = self.states[0]
         self.turnCount = 0
@@ -103,70 +105,70 @@ class GameModel():
             #For all cubes starting with the one right
             #above the bottom, take its state and move it down
             #one
-            for row in range(1, 6):
+            for row in range(1, self.maxrows):
                 #Starts with 6-1 row 5.
                 #Ends with 6-5 row 1.
-                cube = self.cubes[6-row][col]
-                self.cubes[7-row][col].setState(cube.getState())
+                cube = self.cubes[self.maxrows-row][col]
+                self.cubes[self.maxrows+1-row][col].setState(cube.getState())
             #Then row 1 needs the new game state added to its cube
             self.cubes[1][col].setState(self.state)
-        elif row == 7:
+        elif row == self.maxrows+1:
             #Bottom row, shift up
             print('Up Shift')
             #For all cubes starting with the one just below
             #the top, take its state and move it up one
-            for row in range(2, 7):
+            for row in range(2, self.maxrows+2):
                 cube = self.cubes[row][col]
                 self.cubes[row-1][col].setState(cube.getState())
             #Then row 6 needs the new game state added to its cube
-            self.cubes[6][col].setState(self.state)
+            self.cubes[self.maxrows+1][col].setState(self.state)
         elif col == 0:
             #Left row shift right
             print('Right Shift')
             #For all cubes starting with the one right
             #before the right edge, take its state and move to the right
-            for col in range(1, 6):
+            for col in range(1, self.maxcols):
                 #Starts with col 5
                 #ends with col 1
-                cube = self.cubes[row][6-col]
-                self.cubes[row][7-col].setState(cube.getState())
+                cube = self.cubes[row][self.maxcols-col]
+                self.cubes[row][self.maxcols+1-col].setState(cube.getState())
             #Finally put the cube on the left edge to the game state
             self.cubes[row][1].setState(self.state)
-        elif col == 7:
+        elif col == self.maxcols+2:
             #Right row shift left
             print('Left Shift')
             #For all cubes starting with the one right before the
             #left edge, take its state and move it to the left
-            for col in range(2, 7):
+            for col in range(2, self.maxcols+1):
                 cube = self.cubes[row][col]
                 self.cubes[row][col-1].setState(cube.getState())
             #Finally put the cube on the right to the game state
-            self.cubes[row][6].setState(self.state)
+            self.cubes[row][self.maxcols].setState(self.state)
         self.turnCount += 1
         self.state = self.states[self.turnCount%2]
         self.pickedUpCube = None
         self.droppedPoint = None
         self.currentPlayer = self.players[self.turnCount%2]
         self.save()
-        return False #self.checkIfWon()
+        return self.checkIfWon()
 
     def checkIfWon(self):
         '''Checks for rows, cols, or diaganols full of X's or Y's'''
         print('Checking Win')
-        for row in range(1, 7):
+        for row in range(1, self.maxrows+1):
             startCube = self.cubes[row][1]
             if startCube:
-                for col in range(1, 7):
+                for col in range(1, self.maxcols+1):
                     cube = self.cubes[row][col]
                     if cube != startCube:
                         break
                 else:
                     #Won on a row!
                     return True
-        for col in range(1, 7):
+        for col in range(1, self.maxcols+1):
             startCube = self.cubes[1][col]
             if startCube:
-                for row in range(1, 7):
+                for row in range(1, self.maxrows+1):
                     cube = self.cubes[row][col]
                     if cube != startCube:
                         break
@@ -207,45 +209,45 @@ class GameModel():
         self.pickedUpCube = gamecube
         self.dropPoints.clear()
         north = 0
-        south = 7
-        east = 7
+        south = self.maxrows+1
+        east = self.maxcols+1
         west = 0
-        x, y = gamecube.getPos()
-        if x == 1:
+        row, col = gamecube.getPos()
+        if row == 1:
             #On a northern edge
-            self.dropPoints.append((south, y))
-            if y == 1:
+            self.dropPoints.append((south, col))
+            if col == 1:
                 #North West Corner
-                self.dropPoints.append((x, east))
-            elif y == 6:
+                self.dropPoints.append((row, east))
+            elif col == self.maxcols:
                 #North East Corner
-                self.dropPoints.append((x, west))
+                self.dropPoints.append((row, west))
             else:
                 #Northern Edge
-                self.dropPoints.append((x, west))
-                self.dropPoints.append((x, east))
-        elif x == 6:
+                self.dropPoints.append((row, west))
+                self.dropPoints.append((row, east))
+        elif row == self.maxrows:
             #On a southern edge
-            self.dropPoints.append((north, y))
-            if y == 1:
+            self.dropPoints.append((north, col))
+            if col == 1:
                 #South West Corner
-                self.dropPoints.append((x, east))
-            elif y == 6:
+                self.dropPoints.append((row, east))
+            elif col == self.maxcols:
                 #South East Corner
-                self.dropPoints.append((x, west))
+                self.dropPoints.append((row, west))
             else:
-                self.dropPoints.append((x, west))
-                self.dropPoints.append((x, east))
+                self.dropPoints.append((row, west))
+                self.dropPoints.append((row, east))
         else:
             #Western or Eastern Front
-            if y == 1:
+            if col == 1:
                 #Western Edge
-                self.dropPoints.append((x, east))
-                self.dropPoints.append((north, y))
-                self.dropPoints.append((south, y))
-            elif y == 6:
+                self.dropPoints.append((row, east))
+                self.dropPoints.append((north, col))
+                self.dropPoints.append((south, col))
+            elif col == self.maxcols:
                 #Eastern Edge
-                self.dropPoints.append((x, west))
-                self.dropPoints.append((north, y))
-                self.dropPoints.append((south, y))
+                self.dropPoints.append((row, west))
+                self.dropPoints.append((north, col))
+                self.dropPoints.append((south, col))
         return self.dropPoints
