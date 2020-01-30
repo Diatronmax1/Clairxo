@@ -155,7 +155,7 @@ class CubeWidget(QPushButton):
         self.gamemodel = gamemodel
         self.gamecube = gamecube
     
-    def style(self, background='brown', font='28pt Times New Roman'):
+    def style(self, background='#8B4513', font='28pt Times New Roman'):
         if self.gamecube:
             state = self.gamecube.getState()
             if state:
@@ -327,6 +327,10 @@ class GameTab(QWidget):
                 self.winCondition(False, True)
             else:
                 self.winCondition(False)
+        if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
+            self.statusbar.showMessage('Your Turn!')
+        else:
+            self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
         for row in self.cubes:
             for cube in row:
                 if cube:
