@@ -38,6 +38,9 @@ class GameMonitor(QRunnable):
                 pass
             time.sleep(1)
 
+    def end(self):
+        self.working = False
+
 class SquareWidget(QPushButton):
     '''Squares are initially blank but can receive cubes
     temporarily as a way to indicate the intent of moving a
