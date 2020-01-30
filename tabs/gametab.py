@@ -282,6 +282,7 @@ class GameTab(QWidget):
                     self.cubes[idx][idy].reset()
         for square in self.squares:
             square.reset()
+        self.refresh()
 
     def reset(self):
         self.gamemodel.reset()
