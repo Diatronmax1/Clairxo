@@ -31,6 +31,9 @@ class Cube():
     def clear(self):
         self.state = None
 
+    def compareState(self, other):
+        return self.state == other.state
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.state == other.state
 
@@ -62,7 +65,11 @@ class GameModel():
         self.dropPoints = []
         self.droppedPoint = None
         self.pickedUpCube = None
+        self.gameover = False
         self.save()
+
+    def gameOver(self):
+        return self.gameover
 
     def getCurrentPlayer(self):
         return self.currentPlayer
@@ -149,8 +156,9 @@ class GameModel():
         self.pickedUpCube = None
         self.droppedPoint = None
         self.currentPlayer = self.players[self.turnCount%2]
+        self.gameover = self.checkIfWon()
         self.save()
-        return self.checkIfWon()
+        return self.gameover
 
     def checkIfWon(self):
         '''Checks for rows, cols, or diaganols full of X's or Y's'''
@@ -160,7 +168,7 @@ class GameModel():
             if startCube:
                 for col in range(1, self.maxcols+1):
                     cube = self.cubes[row][col]
-                    if cube != startCube:
+                    if not cube.compareState(startCube):
                         break
                 else:
                     #Won on a row!
@@ -170,11 +178,31 @@ class GameModel():
             if startCube:
                 for row in range(1, self.maxrows+1):
                     cube = self.cubes[row][col]
-                    if cube != startCube:
+                    if not cube.compareState(startCube):
                         break
                 else:
                     #Won on a column!
                     return True
+        #Diaganol Check
+        startcube = self.cubes[1][1]
+        if startcube:
+            for diag in range(1, self.maxrows+1):
+                cube = self.cubes[diag][diag]
+                if not cube.compareState(startcube):
+                    break
+                else:
+                    #Won a diaganol
+                    return True
+        startcube = self.cubes[self.maxrows][1]
+        if startcube:
+            for diag in range(1, self.maxrows+1):
+                cube = self.cubes[self.maxrows+1-diag][diag]
+                if not cube.compareState(startcube):
+                    break
+                else:
+                    #Won a diagaonl
+                    return True
+
 
     def getCubes(self):
         return self.cubes

@@ -322,6 +322,9 @@ class GameTab(QWidget):
         if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
             self.statusbar.showMessage('Your Turn!')
         else:
+            if self.gamemodel.gameOver():
+                self.winCondition(False)
+                return
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
         for row in self.cubes:
             for cube in row:
@@ -336,7 +339,8 @@ class GameTab(QWidget):
         won = self.gamemodel.passTurn()
         if won:
             self.statusbar.showMessage('You Win!')
-            self.endGame()
+            self.winCondition()
+            return
         #Spawn the monitor
         for square in self.squares:
             square.reset()
@@ -377,6 +381,18 @@ class GameTab(QWidget):
         dropped cube'''
         self.gamemodel.setQueueDrop(x, y)
         self.passTurnBut.setEnabled(True)
+
+    def winCondition(self, won=True):
+        msgWidget = QMessageBox()
+        msgWidget.setIcon(QMessageBox.Critical)
+        if won:
+            msg = 'You Won!'
+        else:
+            msg = 'You Lost!'
+        msgWidget.setText(msg)
+        msgWidget.setWindowTitle('Alert')
+        msgWidget.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgWidget.exec_()
 
     def endGame(self):
         if self.gameMonitor:
