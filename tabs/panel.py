@@ -53,9 +53,7 @@ class InviteQuery(QDialog):
         self.cancelBut.clicked.connect(self.reject)
         self.inviteList = QListWidget()
         self.msgBar = QLabel('')
-        invites = self.client.getInvites()
-        for invite in invites:
-            self.inviteList.addItem(invite[:-1])
+        self.inviteList.addItems(self.client.getInvites())
         self.inviteList.itemClicked.connect(self.setInviteTarget)
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel('Select an invite'))
@@ -70,7 +68,7 @@ class InviteQuery(QDialog):
 
     def testAccept(self):
         if self.invite:
-            self.client.acceptInvite(invite)
+            self.client.acceptInvite(self.invite)
             self.accept()
         else:
             self.msgBar.setText('Select a invite first!')
@@ -133,7 +131,6 @@ class HomeScreen(QWidget):
         layout.addWidget(QLabel('\t'),                  8, 0, 1, 3)
         
     def refresh(self):
-        self.client.connect()
         self.playerList.clear()
         players = self.client.getOnlinePlayers()
         for player in players:

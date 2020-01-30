@@ -223,7 +223,10 @@ class GameTab(QWidget):
         self.client = client
         self.gamemodel = gamemodel
         self.statusbar = statusbar
-        self.statusbar.showMessage('Your Turn!')
+        if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
+            self.statusbar.showMessage('Your Turn!')
+        else:
+            self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
         self.signals = WorkerSignals()
         self.passTurnBut = QPushButton('Accept and Pass Turn')
         self.passTurnBut.setEnabled(False)
@@ -275,6 +278,7 @@ class GameTab(QWidget):
             self.gamemodel = pickle.load(gfile)
         for cube in self.cubes:
             cube.setGameCube(self.gamemodel.getCube(cube.x, cube.y))
+        self.refresh()
 
     def reset(self):
         self.gamemodel.reset()
@@ -291,7 +295,6 @@ class GameTab(QWidget):
 
     def passTurn(self):
         '''Should clear the squares of their cubes and move the turn'''
-
         for square in self.squares:
             square.reset()
         for cube in self.cubes:

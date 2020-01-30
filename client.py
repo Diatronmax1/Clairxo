@@ -37,13 +37,14 @@ class Client():
         #Now that the config file has been loaded in the 
         #remaining functions are guranteed to have a self.config
         #available.
+        self.connect()
 
     def getInvites(self):
         return self.invites
 
     def acceptInvite(self, invite):
         print('Invite accepted!: ' + self.invites[invite])
-        self.config.setCurrentGame(self.invites[invite])
+        self.config.setCurrentGame(self.invites[invite][:-1])
 
     def getCurrentGame(self):
         return self.config.getCurrentGame()
@@ -143,4 +144,5 @@ class Client():
         cg = self.config.getCurrentGame()
         if cg:
             if not os.path.exists(cg):
+                print('No current game path')
                 self.config.setCurrentGame('')

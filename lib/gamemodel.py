@@ -180,11 +180,13 @@ class GameModel():
     def getCubes(self):
         return self.cubes
 
+    def getSaveFile(self):
+        return os.path.join(self.client.getGamePath(), self.filename + '.gtp')
+
     def save(self):
         '''Saves in the game folder'''
         gamefolder = self.client.getGamePath()
         savefile = os.path.join(gamefolder, self.filename)
-        self.client.alertPlayer(savefile + '.gtp')
         with open(savefile + '.gtp', 'wb') as gfile:
             pickle.dump(self, gfile)
 

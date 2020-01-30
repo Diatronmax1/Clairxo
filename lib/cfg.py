@@ -18,6 +18,7 @@ class CFGFile():
 
     def setCurrentGame(self, gamepath):
         self.currentGame = gamepath
+        print('saving')
         self.save()
 
     def getCurrentGame(self):

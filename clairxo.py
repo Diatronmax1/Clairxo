@@ -64,6 +64,7 @@ class Clairxo(QMainWindow):
         '''
         print('Starting a game with ' + player)
         self.gamemodel = GameModel(self.client, self.client.getUserName(), player)
+        self.client.alertPlayer(self.gamemodel.getSaveFile())
         self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
         self.gameWidget.signals.finished.connect(self.returnToMain)
         self.setCentralWidget(self.gameWidget)
