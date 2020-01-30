@@ -32,8 +32,6 @@ class GameMonitor(QRunnable):
                     if gamemodel.getCurrentPlayer() == self.client.getUserName():
                         self.signals.notify.emit(gamemodel)
                         self.working = False
-                    else:
-                        print('I am not: ' + gamemodel.getCurrentPlayer())
             except:
                 pass
             time.sleep(1)
@@ -65,7 +63,7 @@ class SquareWidget(QPushButton):
 
     def style(self, background='blue', font='22pt Times New Roman'):
         if self.gamecube:
-            name = self.gamecube.getState()
+            name = self.gamemodel.getState()
             if self.x == 0 and (self.y != 0 or self.y != 7):
                 #Top Row, arrow should point down
                 self.setText(name + '\nv')
@@ -160,13 +158,11 @@ class CubeWidget(QPushButton):
         if self.gamecube:
             state = self.gamecube.getState()
             if state:
-                if self.selected:
-                    self.setText('| |')
-                else:
-                    self.setText(state)
+                self.setText(state)
             else:
                 self.setText('')
         if self.selected:
+            self.setText('| |')
             background = 'pink'
         self.setStyleSheet("background-color:" + background + ";"
                            "font: " + font + ";")
@@ -177,31 +173,27 @@ class CubeWidget(QPushButton):
         picked up
         '''
         if e.buttons() != Qt.RightButton or not self.gamecube.edge:
-            print('Edge Cube?: ' + str(self.gamecube.edge))
+            #print('Edge Cube?: ' + str(self.gamecube.edge))
             return
         #Make sure there arent picked up cubes already on the board
         pc = self.gamemodel.getPickedUpCube()
         if pc:
             if self.gamecube != pc:
-                print('still a picked up cube on the board')
+                #print('still a picked up cube on the board')
                 return
         #Make sure there arent cubes waiting in drop zones
         dp = self.gamemodel.getDroppedPoint()
         if dp:
-            print('still a dropped cube in waiting zone')
+            #print('still a dropped cube in waiting zone')
             return
         #Make sure you are allowed to pick up this cube type
         state = self.gamecube.getState()
         if state:
             if state != self.gamemodel.getState():
-                print('You arent allowed to pick up cubes right now')
                 return
         #Ensure you can be playing right now
         if self.client.getUserName() != self.gamemodel.getCurrentPlayer():
-            print('You: ' + self.client.getUserName())
-            print('Them: ' + self.gamemodel.getCurrentPlayer())
             return
-        self.gamecube.setState(self.gamemodel.getState())
         self.signals.pickedUp.emit(self.gamecube)
         self.selected = True
         mimeData = QMimeData()
@@ -338,7 +330,7 @@ class GameTab(QWidget):
             for cube in row:
                 if cube:
                     cube.reset()
-        print('Current player: ' + self.gamemodel.getCurrentPlayer())
+        self.refresh()
         self.gameMonitor = GameMonitor(self.client)
         self.gameMonitor.signals.notify.connect(self.reloadGame)
         self.threadpool.start(self.gameMonitor)

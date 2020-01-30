@@ -40,14 +40,16 @@ class Clairxo(QMainWindow):
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
         self.setWindowTitle('CLAIRXO')
-        self.setGeometry(650, 100, 700, 700)
+        self.setGeometry(600, 100, 800, 800)
+        self.startMonitor()
         self.show()
 
     def createHomePanel(self):
         self.mainwindow = HomeScreen(self.client, self.statusBar())
         self.mainwindow.signals.newGame.connect(self.newGame)
         self.mainwindow.signals.loadGame.connect(self.loadGame)
-        self.client.connect()
+
+    def startMonitor(self):
         #Start threading
         self.monitor = ClientMonitor(self.client)
         self.monitor.signals.notify.connect(self.refresh)
@@ -62,17 +64,17 @@ class Clairxo(QMainWindow):
         progress, if not generates a new game model and a game
         widget to hold it.
         '''
+        self.monitor.end()
         print('Starting a game with ' + player)
         self.gamemodel = GameModel(self.client, self.client.getUserName(), player)
-        self.client.alertPlayer(self.gamemodel.getSaveFile())
+        self.client.createInvite(self.gamemodel.getSaveFile())
         self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
         self.gameWidget.signals.finished.connect(self.returnToMain)
         self.setCentralWidget(self.gameWidget)
         #Now that the main widget has been reset all panel items
         #Should be discarded
         self.mainwindow = None
-        self.monitor.end()
-
+        
     def loadGame(self):
         currentGame = self.client.getCurrentGame()
         with open(currentGame, 'rb') as gfile:
@@ -87,13 +89,12 @@ class Clairxo(QMainWindow):
         #Create all the panel widgets again and reconnect the signals
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
-        self.setGeometry(650, 100, 700, 700)
+        self.startMonitor()
         #Delete all the old game information
         self.gamemodel = None
-        self.gameWidget = None
+        self.gameWidget.signals.finished.disconnect()
         self.statusBar().showMessage('Main Menu')
-
-        
+  
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     screen = app.primaryScreen()

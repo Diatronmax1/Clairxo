@@ -43,8 +43,19 @@ class Client():
         return self.invites
 
     def acceptInvite(self, invite):
-        print('Invite accepted!: ' + self.invites[invite])
-        self.config.setCurrentGame(self.invites[invite][:-1])
+        newgamepath = self.invites.pop(invite)
+        self.config.setCurrentGame(newgamepath[:-1])
+        #Check invites
+        ip = self.config.getTransferPath()
+        invites = []
+        if os.path.exists(ip):
+            with open(ip, 'r') as tfile:
+                for line in tfile:
+                    if not line.endsiwth(newgamepath):
+                        invites.append(line)
+        with open(ip, 'w') as tfile:
+            for invite in invites:
+                tfile.write(invite)
 
     def getCurrentGame(self):
         return self.config.getCurrentGame()
@@ -83,7 +94,7 @@ class Client():
     def getPlayerTarget(self):
         return self.playerTarget
 
-    def alertPlayer(self, savefile):
+    def createInvite(self, savefile):
         tp = self.config.getTransferPath()
         self.config.setCurrentGame(savefile)
         with open(tp, 'a+') as tfile:
