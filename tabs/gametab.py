@@ -319,9 +319,23 @@ class GameTab(QWidget):
 
     def refresh(self):
         #If its your turn we can turn off the game monitor
-        if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
-            if self.gamemodel.gameOver():
-                self.winCondition(False)
+        username = self.client.getUserName()
+        if username == self.gamemodel.getCurrentPlayer():
+            winner = self.gamemodel.gameOver()
+            if winner == 'Tie!':
+                self.winCondition(False, True)
+                return
+            elif winner == 'X':
+                if username == self.gamemodel.getPlayerOne():
+                    self.winCondition(True)
+                else:
+                    self.winCondition(False)
+                return
+            elif winner == 'Y':
+                if username == self.gamemodel.getPlayerOne():
+                    self.winCondition(False)
+                else:
+                    self.winCondition(True)
                 return
             else:
                 self.statusbar.showMessage('Your Turn!')
@@ -345,10 +359,6 @@ class GameTab(QWidget):
             for cube in row:
                 if cube:
                     cube.reset()
-        if won:
-            self.statusbar.showMessage('You Win!')
-            self.winCondition()
-            return
         self.refresh()
         self.gameMonitor = GameMonitor(self.client)
         self.gameMonitor.signals.notify.connect(self.reloadGame)

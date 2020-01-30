@@ -68,6 +68,9 @@ class GameModel():
         self.gameover = False
         self.save()
 
+    def getPlayerOne(self):
+        return self.players[0]
+
     def gameOver(self):
         return self.gameover
 
@@ -163,50 +166,75 @@ class GameModel():
     def checkIfWon(self):
         '''Checks for rows, cols, or diaganols full of X's or Y's'''
         print('Checking Win')
+        xwon = False
+        ywon = False
         for row in range(1, self.maxrows+1):
             startCube = self.cubes[row][1]
             if startCube:
-                if startCube.getState():
+                state = startCube.getState()
+                if state:
                     for col in range(1, self.maxcols+1):
                         cube = self.cubes[row][col]
                         if not cube.compareState(startCube):
                             break
                     else:
                         #Won on a row!
-                        return True
+                        if state == 'X':
+                            xwon = True
+                        else:
+                            ywon = True
         for col in range(1, self.maxcols+1):
             startCube = self.cubes[1][col]
             if startCube:
-                if startCube.getState():
+                state = startCube.getState()
+                if state:
                     for row in range(1, self.maxrows+1):
                         cube = self.cubes[row][col]
                         if not cube.compareState(startCube):
                             break
                     else:
                         #Won on a column!
-                        return True
+                        if state == 'X':
+                            xwon = True
+                        else:
+                            ywon = True
         #Diaganol Check
         startcube = self.cubes[1][1]
         if startcube:
-            if startCube.getState():
+            state = startCube.getState()
+            if state:
                 for diag in range(1, self.maxrows+1):
                     cube = self.cubes[diag][diag]
                     if not cube.compareState(startcube):
                         break
                     else:
                         #Won a diaganol
-                        return True
+                        if state == 'X':
+                            xwon = True
+                        else:
+                            ywon = True
         startcube = self.cubes[self.maxrows][1]
         if startcube:
-            if startCube.getState():
+            state = startCube.getState()
+            if state:
                 for diag in range(1, self.maxrows+1):
                     cube = self.cubes[self.maxrows+1-diag][diag]
                     if not cube.compareState(startcube):
                         break
                     else:
                         #Won a diagaonl
-                        return True
-        return False
+                        if state == 'X':
+                            xwon = True
+                        else:
+                            ywon = True
+        #Now that we have who may have won we need to set the winner or not
+        if xwon:
+            if ywon:
+                return 'Tie!'
+            else:
+                return 'X'
+        else:
+            return 'Y'
 
 
     def getCubes(self):
