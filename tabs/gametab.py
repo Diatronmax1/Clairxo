@@ -9,7 +9,7 @@ import pickle
 
 class WorkerSignals(QObject):
     finished = pyqtSignal()
-    notify = pyqtSignal()
+    notify = pyqtSignal(object)
 
 class ButtonSignals(QObject):
     pickedUp = pyqtSignal(object)
@@ -26,11 +26,17 @@ class GameMonitor(QRunnable):
     def run(self):
         self.working = True
         while self.working:
+            try:
+                with open(self.client.getCurrentGame(), 'rb') as gfile:
+                    gamemodel = pickle.load(gfile)
+                    if gamemodel.getCurrentPlayer() == self.client.getUserName():
+                        self.signals.notify.emit(gamemodel)
+                        self.working = False
+                    else:
+                        print('I am not: ' + gamemodel.getCurrentPlayer())
+            except:
+                pass
             time.sleep(1)
-            self.signals.notify.emit()
-
-    def end(self):
-        self.working = False
 
 class SquareWidget(QPushButton):
     '''Squares are initially blank but can receive cubes
@@ -50,6 +56,9 @@ class SquareWidget(QPushButton):
         self.x = x
         self.y = y
         self.style()
+
+    def setGameModel(self, gamemodel):
+        self.gamemodel = gamemodel
 
     def style(self, background='blue', font='22pt Times New Roman'):
         if self.gamecube:
@@ -140,7 +149,8 @@ class CubeWidget(QPushButton):
         self.setFixedSize(75, 75)
         self.style()
 
-    def setGameCube(self, gamecube):
+    def setGameCube(self, gamemodel, gamecube):
+        self.gamemodel = gamemodel
         self.gamecube = gamecube
     
     def style(self, background='brown', font='28pt Times New Roman'):
@@ -277,22 +287,17 @@ class GameTab(QWidget):
         layout.addWidget(self.endgamebut)
         self.setAcceptDrops(True)
 
-    def reloadGame(self):
-        currentGame = self.client.getCurrentGame()
-        try:
-            with open(currentGame, 'rb') as gfile:
-                self.gamemodel = pickle.load(gfile)
-            for idx, row in enumerate(self.gamemodel.getCubes()):
-                for idy, gamecube in enumerate(row):
-                    if gamecube is not None:
-                        self.cubes[idx][idy].setGameCube(gamecube)
-                        self.cubes[idx][idy].reset()
-            for square in self.squares:
-                square.reset()
-            self.refresh()
-        except:
-            #Sometimes may read at the same time as a save
-            pass
+    def reloadGame(self, newgamemodel):
+        self.gamemodel = newgamemodel
+        for idx, row in enumerate(self.gamemodel.getCubes()):
+            for idy, gamecube in enumerate(row):
+                if gamecube is not None:
+                    self.cubes[idx][idy].setGameCube(self.gamemodel, gamecube)
+                    self.cubes[idx][idy].reset()
+        for square in self.squares:
+            square.setGameModel(self.gamemodel)
+            square.reset()
+        self.refresh()
 
     def reset(self):
         self.gamemodel.reset()
@@ -307,7 +312,6 @@ class GameTab(QWidget):
         #If its your turn we can turn off the game monitor
         if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
             self.statusbar.showMessage('Your Turn!')
-            self.gameMonitor.end()
         else:
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
         for row in self.cubes:
