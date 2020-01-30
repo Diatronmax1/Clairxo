@@ -117,7 +117,7 @@ class GameModel():
             print('Up Shift')
             #For all cubes starting with the one just below
             #the top, take its state and move it up one
-            for row in range(2, self.maxrows+2):
+            for row in range(2, self.maxrows+1):
                 cube = self.cubes[row][col]
                 self.cubes[row-1][col].setState(cube.getState())
             #Then row 6 needs the new game state added to its cube
@@ -134,7 +134,7 @@ class GameModel():
                 self.cubes[row][self.maxcols+1-col].setState(cube.getState())
             #Finally put the cube on the left edge to the game state
             self.cubes[row][1].setState(self.state)
-        elif col == self.maxcols+2:
+        elif col == self.maxcols+1:
             #Right row shift left
             print('Left Shift')
             #For all cubes starting with the one right before the
