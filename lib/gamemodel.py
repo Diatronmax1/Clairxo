@@ -207,7 +207,7 @@ class GameModel():
                 #and see if tis the same
                 for row in range(2, self.maxwidth+1):
                     rowstate = self.cubes[row][col].getState()
-                    if state != rowstate::
+                    if state != rowstate:
                         break
                 #If you reach the end of a column and they're all the 
                 #same you won on a column
