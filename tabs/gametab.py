@@ -322,6 +322,7 @@ class GameTab(QWidget):
         username = self.client.getUserName()
         if username == self.gamemodel.getCurrentPlayer():
             winner = self.gamemodel.gameOver()
+            print(winner)
             if winner == 'Tie!':
                 self.winCondition(False, True)
                 return
@@ -393,13 +394,15 @@ class GameTab(QWidget):
         self.gamemodel.setQueueDrop(x, y)
         self.passTurnBut.setEnabled(True)
 
-    def winCondition(self, won=True):
+    def winCondition(self, won=True, tie=False):
         msgWidget = QMessageBox()
         msgWidget.setIcon(QMessageBox.Critical)
         if won:
             msg = 'You Won!'
         else:
             msg = 'You Lost!'
+        if tie:
+            msg = 'You Tied!'
         msgWidget.setText(msg)
         msgWidget.setWindowTitle('Alert')
         msgWidget.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
