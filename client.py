@@ -43,6 +43,10 @@ class Client():
 
     def acceptInvite(self, invite):
         print('Invite accepted!: ' + self.invites[invite])
+        self.config.setCurrentGame(self.invites[invite])
+
+    def getCurrentGame(self):
+        return self.config.getCurrentGame()
 
     def checkUserName(self):
         return self.user
@@ -83,9 +87,6 @@ class Client():
         self.config.setCurrentGame(savefile)
         with open(tp, 'a+') as tfile:
             tfile.write(self.playerTarget[:-1] + '-' + savefile + '\n')
-
-    def passTurn(self):
-        print('Alerting other player their turn is ready')
 
     def goOffline(self):
         print('Going offline')
@@ -143,6 +144,3 @@ class Client():
         if cg:
             if not os.path.exists(cg):
                 self.config.setCurrentGame('')
-
-    def getCurrentGame(self):
-        return self.config.getCurrentGame()

@@ -291,7 +291,7 @@ class GameTab(QWidget):
 
     def passTurn(self):
         '''Should clear the squares of their cubes and move the turn'''
-        
+
         for square in self.squares:
             square.reset()
         for cube in self.cubes:
@@ -302,7 +302,6 @@ class GameTab(QWidget):
             self.endGame()
         else:
             self.statusbar.showMessage('Other Players Turn!')
-        self.client.passTurn()
         self.refresh()
         self.passTurnBut.setEnabled(False)
 

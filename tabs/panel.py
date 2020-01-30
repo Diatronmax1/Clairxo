@@ -41,7 +41,7 @@ class PlayerQuery(QDialog):
         if self.player:
             self.accept()
         else:
-            self.msgBar.setText('Select a player first!')
+            self.msgBar.setText('Select an first!')
 
 class InviteQuery(QDialog):
     def __init__(self, client):
@@ -58,7 +58,7 @@ class InviteQuery(QDialog):
             self.inviteList.addItem(invite[:-1])
         self.inviteList.itemClicked.connect(self.setInviteTarget)
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel('Select a player'))
+        layout.addWidget(QLabel('Select an invite'))
         layout.addWidget(self.inviteList)
         layout.addWidget(self.acceptBut)
         layout.addWidget(self.cancelBut)
@@ -73,7 +73,7 @@ class InviteQuery(QDialog):
             self.client.acceptInvite(invite)
             self.accept()
         else:
-            self.msgBar.setText('Select a player first!')
+            self.msgBar.setText('Select a invite first!')
 
 class HomeScreen(QWidget):
     def __init__(self, client, statusbar):
