@@ -165,8 +165,7 @@ class GameModel():
         self.pickedUpCube = None
         self.droppedPoint = None
         self.currentPlayer = self.players[self.turnCount%2]
-        self.gameover = self.checkIfWon()
-        print(self.gameover)
+        #self.gameover = self.checkIfWon()
         self.save()
         return self.gameover
 
