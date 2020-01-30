@@ -324,7 +324,6 @@ class GameTab(QWidget):
         else:
             if self.gamemodel.gameOver():
                 self.winCondition(False)
-                return
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
         for row in self.cubes:
             for cube in row:
@@ -340,7 +339,6 @@ class GameTab(QWidget):
         if won:
             self.statusbar.showMessage('You Win!')
             self.winCondition()
-            return
         #Spawn the monitor
         for square in self.squares:
             square.reset()
@@ -393,6 +391,7 @@ class GameTab(QWidget):
         msgWidget.setWindowTitle('Alert')
         msgWidget.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         msgWidget.exec_()
+        self.endGame()
 
     def endGame(self):
         if self.gameMonitor:
