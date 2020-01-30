@@ -309,19 +309,17 @@ class GameTab(QWidget):
     def passTurn(self):
         '''Should clear the squares of their cubes and move the turn'''
         self.passTurnBut.setEnabled(False)
+        won = self.gamemodel.passTurn()
+        if won:
+            self.statusbar.showMessage('You Win!')
+            self.endGame()
+        #Spawn the monitor
         for square in self.squares:
             square.reset()
         for row in self.cubes:
             for cube in row:
                 if cube:
                     cube.deSelect()
-        won = self.gamemodel.passTurn()
-        if won:
-            self.statusbar.showMessage('You Win!')
-            self.endGame()
-        else:
-            self.statusbar.showMessage('Other Players Turn!')
-        #Spawn the monitor
         self.gameMonitor = GameMonitor(self.client)
         self.gameMonitor.signals.notify.connect(self.reloadGame)
         self.threadpool.start(self.gameMonitor)
