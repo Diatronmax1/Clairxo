@@ -12,6 +12,7 @@ class Cube():
         self.edge = edge
 
     def setState(self, state):
+        print('State Set!')
         self.oldstate = self.state
         self.state = state
 
@@ -204,8 +205,6 @@ class GameModel():
             gamecube (obj): Cube object with cooridnates
         """
         self.pickedUpCube = gamecube
-        if self.pickedUpCube.getState() is None:
-            self.pickedUpCube.setState(self.state)
         self.dropPoints.clear()
         north = 0
         south = 7

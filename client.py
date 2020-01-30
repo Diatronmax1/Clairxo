@@ -51,7 +51,7 @@ class Client():
         if os.path.exists(ip):
             with open(ip, 'r') as tfile:
                 for line in tfile:
-                    if not line.endsiwth(newgamepath):
+                    if not line.endswith(newgamepath):
                         invites.append(line)
         with open(ip, 'w') as tfile:
             for invite in invites:
