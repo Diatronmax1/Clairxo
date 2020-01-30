@@ -169,15 +169,18 @@ class CubeWidget(QPushButton):
         pc = self.gamemodel.getPickedUpCube()
         if pc:
             if self.gamecube != pc:
+                print('still a picked up cube on the board')
                 return
         #Make sure there arent cubes waiting in drop zones
         dp = self.gamemodel.getDroppedPoint()
         if dp:
+            print('still a dropped cube in waiting zone')
             return
         #Make sure you are allowed to pick up this cube type
         state = self.gamecube.getState()
         if state:
             if state != self.gamemodel.getState():
+                print('You arent allowed to pick up cubes right now')
                 return
         #Ensure you can be playing right now
         if self.client.getUserName() != self.gamemodel.getCurrentPlayer():
