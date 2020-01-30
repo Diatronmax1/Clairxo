@@ -12,7 +12,6 @@ class Cube():
         self.edge = edge
 
     def setState(self, state):
-        print('State Set!')
         self.oldstate = self.state
         self.state = state
 
@@ -105,14 +104,12 @@ class GameModel():
 
     def passTurn(self):
         #Move the dropped block into the grid shifting all of the cubes.
-        print('Shifting ' + str(self.droppedPoint) + ' into grid')
         #Determine whether the shift is a row or column shift
         startRow, startCol = self.droppedPoint
         puc = self.getPickedUpCube()
         pRow, pCol = puc.getPos()
         if startRow == 0:
             #Top Row, shift down a column
-            print('Down shift')
             #Depending on where the cube was removed, not all the blocks
             #may need to be moved down. Take where the cube was picked
             #up and move all others above it down.
@@ -126,7 +123,6 @@ class GameModel():
             self.cubes[1][startCol].setState(self.state)
         elif startRow == self.maxwidth+1:
             #Bottom row, shift up
-            print('Up Shift')
             #Start with right below the picked up cubes location
             #and move that state into where the picked up cube was
             #cascade down to the bottom.
@@ -137,7 +133,6 @@ class GameModel():
             self.cubes[self.maxwidth][startCol].setState(self.state)
         elif startCol == 0:
             #Left row shift right
-            print('Right Shift')
             #Start with the one the left of the picked up cube
             #and move its value to the picked up cube
             #cascade to the left
@@ -150,7 +145,6 @@ class GameModel():
             self.cubes[startRow][1].setState(self.state)
         elif startCol == self.maxwidth+1:
             #Right row shift left
-            print('Left Shift')
             #Start with the one to the right of the picked up cube
             #and move its value to the picked up cube
             #cascade to the right
@@ -170,7 +164,6 @@ class GameModel():
 
     def checkIfWon(self):
         '''Checks for rows, cols, or diaganols full of X's or O's'''
-        print('Checking Win')
         xwon = False
         ywon = False
         #Check from row 1 to maxwidth

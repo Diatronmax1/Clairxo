@@ -115,7 +115,6 @@ class SquareWidget(QPushButton):
         square is receiving drops request the gamemodel to 
         provide a game cube matching the payload's string 
         parameter'''
-        #print('Received Drop: ' + e.mimeData.text())
         if self.validDrop:
             self.gamecube = self.gamemodel.getPickedUpCube()
             self.signals.receievedCube.emit(self.x, self.y)
@@ -352,7 +351,6 @@ class GameTab(QWidget):
         self.threadpool.start(self.gameMonitor)
         
     def pickedUp(self, gamecube):
-        print('Picked Up: ' + str(gamecube))
         dropPoints = self.gamemodel.updateDrops(gamecube)
         for point in dropPoints:
             for square in self.squares:
@@ -360,7 +358,6 @@ class GameTab(QWidget):
                     square.setValidDrop(True)
 
     def cancelMove(self):
-        print('Canceling move')
         self.passTurnBut.setEnabled(False)
         self.gamemodel.cancelPickedUp()
         dropPoints = self.gamemodel.getDropPoints()
