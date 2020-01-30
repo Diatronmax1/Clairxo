@@ -166,42 +166,46 @@ class GameModel():
         for row in range(1, self.maxrows+1):
             startCube = self.cubes[row][1]
             if startCube:
-                for col in range(1, self.maxcols+1):
-                    cube = self.cubes[row][col]
-                    if not cube.compareState(startCube):
-                        break
-                else:
-                    #Won on a row!
-                    return True
+                if startCube.getState():
+                    for col in range(1, self.maxcols+1):
+                        cube = self.cubes[row][col]
+                        if not cube.compareState(startCube):
+                            break
+                    else:
+                        #Won on a row!
+                        return True
         for col in range(1, self.maxcols+1):
             startCube = self.cubes[1][col]
             if startCube:
-                for row in range(1, self.maxrows+1):
-                    cube = self.cubes[row][col]
-                    if not cube.compareState(startCube):
+                if startCube.getState():
+                    for row in range(1, self.maxrows+1):
+                        cube = self.cubes[row][col]
+                        if not cube.compareState(startCube):
+                            break
+                    else:
+                        #Won on a column!
+                        return True
+        #Diaganol Check
+        startcube = self.cubes[1][1]
+        if startcube:
+            if startCube.getState():
+                for diag in range(1, self.maxrows+1):
+                    cube = self.cubes[diag][diag]
+                    if not cube.compareState(startcube):
                         break
-                else:
-                    #Won on a column!
-                    return True
-        # #Diaganol Check
-        # startcube = self.cubes[1][1]
-        # if startcube:
-        #     for diag in range(1, self.maxrows+1):
-        #         cube = self.cubes[diag][diag]
-        #         if not cube.compareState(startcube):
-        #             break
-        #         else:
-        #             #Won a diaganol
-        #             return True
-        # startcube = self.cubes[self.maxrows][1]
-        # if startcube:
-        #     for diag in range(1, self.maxrows+1):
-        #         cube = self.cubes[self.maxrows+1-diag][diag]
-        #         if not cube.compareState(startcube):
-        #             break
-        #         else:
-        #             #Won a diagaonl
-        #             return True
+                    else:
+                        #Won a diaganol
+                        return True
+        startcube = self.cubes[self.maxrows][1]
+        if startcube:
+            if startCube.getState():
+                for diag in range(1, self.maxrows+1):
+                    cube = self.cubes[self.maxrows+1-diag][diag]
+                    if not cube.compareState(startcube):
+                        break
+                    else:
+                        #Won a diagaonl
+                        return True
         return False
 
 
