@@ -208,12 +208,12 @@ class GameModel():
                     cube = self.cubes[diag][diag]
                     if not cube.compareState(startcube):
                         break
+                else:
+                    #Won a diaganol
+                    if state == 'X':
+                        xwon = True
                     else:
-                        #Won a diaganol
-                        if state == 'X':
-                            xwon = True
-                        else:
-                            ywon = True
+                        ywon = True
         startcube = self.cubes[self.maxrows][1]
         if startcube:
             state = startCube.getState()
@@ -222,12 +222,12 @@ class GameModel():
                     cube = self.cubes[self.maxrows+1-diag][diag]
                     if not cube.compareState(startcube):
                         break
+                else:
+                    #Won a diagaonl
+                    if state == 'X':
+                        xwon = True
                     else:
-                        #Won a diagaonl
-                        if state == 'X':
-                            xwon = True
-                        else:
-                            ywon = True
+                        ywon = True
         #Now that we have who may have won we need to set the winner or not
         if xwon:
             if ywon:
