@@ -109,25 +109,29 @@ class GameModel():
         print('Shifting ' + str(self.droppedPoint) + ' into grid')
         #Determine whether the shift is a row or column shift
         startRow, startCol = self.droppedPoint
+        puc = self.getPickedUpCube()
+        pRow, pCol = puc.getPos()
         if startRow == 0:
             #Top Row, shift down a column
             print('Down shift')
-            #For all cubes starting with the one right
-            #above the bottom, take its state and move it down
-            #one
-            for row in range(1, self.maxrows):
-                #Starts with cube above bottom cube
-                #Ends with cube top
-                cube = self.cubes[self.maxrows-row][startCol]
-                self.cubes[self.maxrows+1-row][startCol].setState(cube.getState())
+            #Depending on where the cube was removed, not all the blocks
+            #may need to be moved down. Take where the cube was picked
+            #up and move all others above it down.
+            for row in range(pRow-1, 0, -1):
+                #Start with right above the picked up cubes location
+                #and move that state down into the cube. Cascade to the 
+                #top.
+                cube = self.cubes[row][startCol]
+                self.cubes[row+1][startCol].setState(cube.getState())
             #Then row 1 needs the new game state added to its cube
             self.cubes[1][startCol].setState(self.state)
         elif startRow == self.maxrows+1:
             #Bottom row, shift up
             print('Up Shift')
-            #For all cubes starting with the one just below
-            #the top, take its state and move it up one
-            for row in range(2, self.maxrows+1):
+            #Start with right below the picked up cubes location
+            #and move that state into where the picked up cube was
+            #cascade down to the bottom.
+            for row in range(pRow+1, self.maxrows+1):
                 cube = self.cubes[row][startCol]
                 self.cubes[row-1][startCol].setState(cube.getState())
             #Then row 6 needs the new game state added to its cube
@@ -135,21 +139,23 @@ class GameModel():
         elif startCol == 0:
             #Left row shift right
             print('Right Shift')
-            #For all cubes starting with the one right
-            #before the right edge, take its state and move to the right
-            for col in range(1, self.maxcols):
+            #Start with the one the left of the picked up cube
+            #and move its value to the picked up cube
+            #cascade to the left
+            for col in range(pCol-1, 0, -1):
                 #Starts with max column
                 #ends with col 1
-                cube = self.cubes[startRow][self.maxcols-col]
-                self.cubes[startRow][self.maxcols+1-col].setState(cube.getState())
+                cube = self.cubes[startRow][col]
+                self.cubes[startRow][col+1].setState(cube.getState())
             #Finally put the cube on the left edge to the game state
             self.cubes[startRow][1].setState(self.state)
         elif startCol == self.maxcols+1:
             #Right row shift left
             print('Left Shift')
-            #For all cubes starting with the one right before the
-            #left edge, take its state and move it to the left
-            for col in range(2, self.maxcols+1):
+            #Start with the one to the right of the picked up cube
+            #and move its value to the picked up cube
+            #cascade to the right
+            for col in range(pCol+1, self.maxcols+1):
                 cube = self.cubes[startRow][col]
                 self.cubes[startRow][col-1].setState(cube.getState())
             #Finally put the cube on the right to the game state
