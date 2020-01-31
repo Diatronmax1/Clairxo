@@ -27,6 +27,7 @@ class GameMonitor(QRunnable):
     def run(self):
         self.working = True
         while self.working:
+            print('Game monitor loop')
             try:
                 with open(self.client.getCurrentGame(), 'rb') as gfile:
                     gamemodel = pickle.load(gfile)
@@ -446,6 +447,7 @@ class GameTab(QWidget):
     def endGame(self):
         if self.gameMonitor:
             self.gameMonitor.end()
+            self.gameMonitor = None
         #Delete the game from the server and set it 
         #to no current game
         self.client.removeCurrentGame()
@@ -456,4 +458,5 @@ class GameTab(QWidget):
         if self.gameMonitor:
             print('monitor killed')
             self.gameMonitor.end()
+            self.gameMonitor = None
         self.signals.finished.emit()

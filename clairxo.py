@@ -154,7 +154,6 @@ class Clairxo(QMainWindow):
                         print('setting central widget')
                         self.setCentralWidget(self.gameWidget)
                         self.mainwindow = None
-                        print('disabling monitor')
                         self.monitor.end()
                         tries = 0
                 #except:
