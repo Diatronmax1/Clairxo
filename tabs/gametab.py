@@ -32,6 +32,7 @@ class GameMonitor(QRunnable):
                 with open(self.client.getCurrentGame(), 'rb') as gfile:
                     gamemodel = pickle.load(gfile)
                     if self.waitingForPlayer:
+                        print('Waiting for other player')
                         if gamemodel.getCurrentPlayer() == self.client.getUserName():
                             self.signals.notify.emit(gamemodel)
                     self.signals.getchat.emit(gamemodel.getChat())
@@ -242,6 +243,7 @@ class GameTab(QWidget):
         self.client = client
         self.gamemodel = gamemodel
         self.statusbar = statusbar
+        print(self.gamemodel.getCurrentPlayer())
         self.gameMonitor = GameMonitor(self.client, self.gamemodel.getCurrentPlayer() != self.client.getUserName())
         self.gameMonitor.signals.notify.connect(self.reloadGame)
         self.gameMonitor.signals.getchat.connect(self.updateChat)

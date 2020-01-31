@@ -175,9 +175,9 @@ class GameModel():
             #Finally put the cube on the right to the game state
             self.cubes[startRow][self.maxwidth].setState(self.state)
         self.turnCount += 1
-        self.state = self.states[self.turnCount%2]
         self.pickedUpCube = None
         self.droppedPoint = None
+        self.state = self.states[self.turnCount%2]
         self.currentPlayer = self.players[self.turnCount%2]
         self.gameover = self.checkIfWon()
         self.save()
