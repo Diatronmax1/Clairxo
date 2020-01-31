@@ -51,7 +51,7 @@ class Client():
 
     def acceptInvite(self, invite):
         newgamepath = self.invites.pop(invite)
-        self.config.setCurrentGame(newgamepath[:-1])
+        self.config.setCurrentGame(invite, newgamepath[:-1])
         #Check invites
         ip = self.config.getTransferPath()
         invites = []
