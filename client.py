@@ -162,4 +162,4 @@ class Client():
         if cg:
             if not os.path.exists(cg):
                 print('No current game path')
-                self.config.setCurrentGame('')
+                self.config.removeCurrentGame()
