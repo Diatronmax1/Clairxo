@@ -260,19 +260,13 @@ class GameTab(QWidget):
         #Chat and button window
         self.chatWindow = QTextEdit()
         self.chatWindow.setReadOnly(True)
-        self.sendWindow = QTextEdit()
-        self.sendMessageBut = QPushButton('Send')
-        self.sendMessageBut.clicked.connect(self.sendMessage)
+        self.sendWindow = QLineEdit()
+        self.sendWindow.returnPressed.connect(self.sendMessage)
         msgArea = QWidget()
         layout = QVBoxLayout(msgArea)
-        layout.setStretch(0, 0)
-        layout.setStretch(1, 8)
-        layout.setStretch(2, 0)
-        layout.setStretch(3, 0)
         layout.addWidget(QLabel('Chat'))
         layout.addWidget(self.chatWindow)
         layout.addWidget(self.sendWindow)
-        layout.addWidget(self.sendMessageBut)
         #Development
         gameArea = QWidget()
         layout = QGridLayout(gameArea)
@@ -315,7 +309,7 @@ class GameTab(QWidget):
         self.refresh()
 
     def sendMessage(self):
-        self.gamemodel.addMessage(self.client.getUserName(), self.sendWindow.toPlainText())
+        self.gamemodel.addMessage(self.client.getUserName(), self.sendWindow.text())
         self.sendWindow.setText('')
         self.refresh()
 
