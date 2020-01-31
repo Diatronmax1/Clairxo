@@ -18,26 +18,30 @@ class ButtonSignals(QObject):
     cancelSelection = pyqtSignal()
 
 class GameMonitor(QRunnable):
-    def __init__(self, client, *args, **kwargs):
+    def __init__(self, client, waitingForPlayer, *args, **kwargs):
         super().__init__()
         self.signals = WorkerSignals()
         self.client = client
         self.working = True
+        self.waitingForPlayer = waitingForPlayer
 
     def run(self):
-        self.working = True
         while self.working:
             print('Game monitor loop')
             try:
                 with open(self.client.getCurrentGame(), 'rb') as gfile:
                     gamemodel = pickle.load(gfile)
-                    if gamemodel.getCurrentPlayer() == self.client.getUserName():
-                        self.signals.notify.emit(gamemodel)
+                    if self.waitingForPlayer:
+                        if gamemodel.getCurrentPlayer() == self.client.getUserName():
+                            self.signals.notify.emit(gamemodel)
                     self.signals.getchat.emit(gamemodel.getChat())
             except:
                 pass
             time.sleep(1)
         print('leaving game monitor')
+
+    def setWaitingForPlayer(self, waiting=True):
+        self.waitingForPlayer = waiting
 
     def end(self):
         print('ending game monitor')
@@ -238,8 +242,7 @@ class GameTab(QWidget):
         self.client = client
         self.gamemodel = gamemodel
         self.statusbar = statusbar
-        self.yourTurn = self.gamemodel.getCurrentPlayer() == self.client.getUserName()
-        self.gameMonitor = GameMonitor(self.client)
+        self.gameMonitor = GameMonitor(self.client, self.gamemodel.getCurrentPlayer() != self.client.getUserName())
         self.gameMonitor.signals.notify.connect(self.reloadGame)
         self.gameMonitor.signals.getchat.connect(self.updateChat)
         self.threadpool.start(self.gameMonitor)
@@ -322,18 +325,17 @@ class GameTab(QWidget):
         self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
 
     def reloadGame(self, newgamemodel):
-        if not self.yourTurn:
-            print('Reloading Game for your turn')
-            self.gamemodel = newgamemodel
-            for idx, row in enumerate(self.gamemodel.getCubes()):
-                for idy, gamecube in enumerate(row):
-                    if gamecube is not None:
-                        self.cubes[idx][idy].setGameCube(self.gamemodel, gamecube)
-                        self.cubes[idx][idy].reset()
-            for square in self.squares:
-                square.setGameModel(self.gamemodel)
-                square.reset()
-            self.refresh()
+        print('Reloading Game for your turn')
+        self.gamemodel = newgamemodel
+        for idx, row in enumerate(self.gamemodel.getCubes()):
+            for idy, gamecube in enumerate(row):
+                if gamecube is not None:
+                    self.cubes[idx][idy].setGameCube(self.gamemodel, gamecube)
+                    self.cubes[idx][idy].reset()
+        for square in self.squares:
+            square.setGameModel(self.gamemodel)
+            square.reset()
+        self.refresh()
     
     def refresh(self):
         '''Tests whether the user is the current player or not
@@ -366,8 +368,7 @@ class GameTab(QWidget):
         print('refresh done')
 
     def passTurn(self):
-        self.yourTurn = False
-        '''Should clear the squares of their cubes and move the turn'''
+        self.monitor.setWaitingForPlayer(True)
         self.passTurnBut.setEnabled(False)
         self.gamemodel.passTurn()
         for square in self.squares:
