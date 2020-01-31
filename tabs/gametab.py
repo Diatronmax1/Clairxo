@@ -368,7 +368,7 @@ class GameTab(QWidget):
         print('refresh done')
 
     def passTurn(self):
-        self.monitor.setWaitingForPlayer(True)
+        self.gameMonitor.setWaitingForPlayer(True)
         self.passTurnBut.setEnabled(False)
         self.gamemodel.passTurn()
         for square in self.squares:
