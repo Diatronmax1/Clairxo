@@ -324,7 +324,7 @@ class GameTab(QWidget):
 
     def updateChat(self, newchat):
         print('Refreshing Chat')
-        self.chatWindow.setText(self.gamemodel.getChat())
+        self.chatWindow.setText(newchat)
         self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
 
     def reloadGame(self, newgamemodel):
