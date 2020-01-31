@@ -235,13 +235,17 @@ class GameTab(QWidget):
         self.gamemodel = gamemodel
         self.statusbar = statusbar
         self.gameMonitor = None
-        if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
-            self.statusbar.showMessage('Your Turn!')
-        else:
-            self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
-            self.gameMonitor = GameMonitor(self.client)
-            self.gameMonitor.signals.notify.connect(self.reloadGame)
-            self.threadpool.start(self.gameMonitor)
+        player1 = QLabel(self.gamemodel.getPlayerOne()[:-1])
+        player1.setAlignment(Qt.AlignCenter)
+        vslabel = QLabel('vs')
+        vslabel.setAlignment(Qt.AlignCenter)
+        player2 = QLabel(self.gamemodel.getPlayerTwo()[:-1])
+        player2.setAlignment(Qt.AlignCenter)
+        vsbox = QWidget()
+        layout = QHBoxLayout(vsbox)
+        layout.addWidget(player1)
+        layout.addWidget(vslabel)
+        layout.addWidget(player2)
         self.signals = WorkerSignals()
         self.passTurnBut = QPushButton('Accept and Pass Turn')
         self.passTurnBut.setEnabled(False)
@@ -280,10 +284,16 @@ class GameTab(QWidget):
                         self.squares.append(newSquare)
                         layout.addWidget(newSquare, idx, idy)
         layout = QVBoxLayout(self)
+        layout.setStretch(0, 0)
+        layout.setStretch(1, 2)
+        layout.setStretch(2, 0)
+        layout.setStretch(3, 0)
+        layout.addWidget(vsbox)
         layout.addWidget(gameArea)
         layout.addWidget(self.passTurnBut)
         layout.addWidget(self.endgamebut)
         self.setAcceptDrops(True)
+        self.refresh()
 
     def reloadGame(self, newgamemodel):
         self.gamemodel = newgamemodel
@@ -331,6 +341,9 @@ class GameTab(QWidget):
             self.statusbar.showMessage('Your Turn!')
         else:
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
+            self.gameMonitor = GameMonitor(self.client)
+            self.gameMonitor.signals.notify.connect(self.reloadGame)
+            self.threadpool.start(self.gameMonitor)
         for row in self.cubes:
             for cube in row:
                 if cube:
@@ -399,4 +412,7 @@ class GameTab(QWidget):
     def endGame(self):
         if self.gameMonitor:
             self.gameMonitor.end()
+        #Delete the game from the server and set it 
+        #to no current game
+        self.client.removeCurrentGame()
         self.signals.finished.emit()

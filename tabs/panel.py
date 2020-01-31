@@ -183,6 +183,7 @@ class HomeScreen(QWidget):
             if self.client.getInvites():
                 self.inviteSelect = InviteQuery(self.client)
                 self.inviteSelect.exec_()
+                self.resumeGame()
 
     def startNewGame(self):
         if self.client.getUserName():
@@ -215,6 +216,7 @@ class HomeScreen(QWidget):
             game = self.client.getCurrentGame()
             if game:
                 self.statusbar.showMessage('Current game: ' + game)
+                self.resumeGame()
             else:
                 self.statusbar.showMessage('No current games')
         else:

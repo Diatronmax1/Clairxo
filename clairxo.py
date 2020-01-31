@@ -10,6 +10,7 @@ from tabs.gametab import GameTab
 from tabs.panel import HomeScreen
 import time
 import pickle
+import os
 
 class WorkerSignals(QObject):
     notify = pyqtSignal()
@@ -41,7 +42,7 @@ class Clairxo(QMainWindow):
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
         self.setWindowTitle('CLAIRXO')
-        self.setGeometry(625, 100, 750, 750)
+        self.setGeometry(625, 100, 650, 725)
         self.startMonitor()
         #Set up action bar
         tutorialAct = QAction('Tutorial', self)
@@ -117,13 +118,17 @@ class Clairxo(QMainWindow):
         
     def loadGame(self):
         currentGame = self.client.getCurrentGame()
-        with open(currentGame, 'rb') as gfile:
-            self.gamemodel = pickle.load(gfile)
-            self.gameWidget = GameTab(self.client, self.gamemodel, self.statusbar)
-            self.gameWidget.signals.finished.connect(self.returnToMain)
-            self.setCentralWidget(self.gameWidget)
-            self.mainwindow = None
-            self.monitor.end()
+        if os.path.exists(currentGame):
+            with open(currentGame, 'rb') as gfile:
+                self.gamemodel = pickle.load(gfile)
+                self.gameWidget = GameTab(self.client, self.gamemodel, self.statusbar)
+                self.gameWidget.signals.finished.connect(self.returnToMain)
+                self.setCentralWidget(self.gameWidget)
+                self.mainwindow = None
+                self.monitor.end()
+        else:
+            self.client.removeCurrentGame()
+            self.statusbar.showMessage('Game has been deleted or moved')
 
     def returnToMain(self):
         #Create all the panel widgets again and reconnect the signals

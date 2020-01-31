@@ -1,4 +1,5 @@
 import pickle
+import os
 
 class CFGFile():
     def __init__(self, path):
@@ -37,6 +38,20 @@ class CFGFile():
         self.currentGame = gamepath
         self.games[filename] = self.currentGame
         self.save()
+
+    def removeCurrentGame(self):
+        '''Either called to delete the game in the folder
+        or to remove the game from this client'''
+        if self.currentGame:
+            if os.path.exists(self.currentGame):
+                os.remove(self.currentGame)
+            mark = None
+            for game, path in self.games.items():
+                if path == self.currentGame:
+                    mark = game
+            if mark:
+                self.games.pop(mark)
+            self.currentGame = None
 
     def getGames(self):
         return self.games

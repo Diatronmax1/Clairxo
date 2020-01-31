@@ -66,6 +66,9 @@ class GameModel():
     def getFileName(self):
         return self.filename
 
+    def removeCurrentGame(self):
+        self.config.removeCurrentGame()
+
     def getCubes(self):
         return self.cubes
 
@@ -74,6 +77,9 @@ class GameModel():
 
     def getPlayerOne(self):
         return self.players[0]
+
+    def getPlayerTwo(self):
+        return self.players[1]
 
     def gameOver(self):
         return self.gameover
