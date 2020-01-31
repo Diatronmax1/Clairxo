@@ -338,6 +338,7 @@ class GameTab(QWidget):
         for square in self.squares:
             square.setGameModel(self.gamemodel)
             square.reset()
+        self.gameMonitor.setWaitingForPlayer(False)
         self.refresh()
     
     def refresh(self):
