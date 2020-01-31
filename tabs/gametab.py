@@ -27,9 +27,7 @@ class GameMonitor(QRunnable):
 
     def run(self):
         while self.working:
-            print('Game monitor loop')
-            #try:
-            if True:
+            try:
                 with open(self.client.getCurrentGame(), 'rb') as gfile:
                     gamemodel = pickle.load(gfile)
                     if self.waitingForPlayer:
@@ -37,8 +35,8 @@ class GameMonitor(QRunnable):
                         if gamemodel.getCurrentPlayer() == self.client.getUserName():
                             self.signals.notify.emit(gamemodel)
                     self.signals.getchat.emit(gamemodel.getChat())
-            #except:
-            #    pass
+            except:
+                pass
             time.sleep(1)
         print('leaving game monitor')
 
@@ -323,7 +321,6 @@ class GameTab(QWidget):
         self.sendWindow.setText('')
 
     def updateChat(self, newchat):
-        print('Refreshing Chat')
         self.chatWindow.setText(newchat)
         self.gamemodel.setChat(newchat)
         self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
