@@ -70,6 +70,9 @@ class Client():
     def checkUserName(self):
         return self.user
 
+    def setServerPath(self, newpath):
+        self.config.setServerPath(newpath)
+
     def removeCurrentGame(self):
         self.config.removeCurrentGame()
 
@@ -87,7 +90,7 @@ class Client():
 
     def getOnlinePlayers(self):
         players = []
-        sp = self.config.getServerPath()
+        sp = self.config.getUserPath()
         name = self.config.getName()
         if os.path.exists(sp):
             with open(sp, 'r') as slink:
@@ -112,7 +115,7 @@ class Client():
 
     def goOffline(self):
         print('Going offline')
-        sp = self.config.getServerPath()
+        sp = self.config.getUserPath()
         name = self.config.getName()
         if name == '':
             print('No username so dont disconnect')
@@ -130,7 +133,7 @@ class Client():
             print('Didn\'t connect to server to close')
 
     def connect(self):
-        sp = self.config.getServerPath()
+        sp = self.config.getUserPath()
         name = self.config.getName()
         if name == '':
             return

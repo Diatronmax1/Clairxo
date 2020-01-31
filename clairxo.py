@@ -52,12 +52,17 @@ class Clairxo(QMainWindow):
         userNameAct = QAction('Set User Name', self)
         userNameAct.setStatusTip('Sets the username for this isntance')
         userNameAct.triggered.connect(self.setUserName)
+        #Set new Server
+        newServerAct = QAction('Select New Server', self)
+        newServerAct.setStatusTip('Sets a new server location, will copy all games to it if it still has connection to old server')
+        newServerAct.triggered.connect(self.setServerPath)
         #Menu bar
         menubar = self.menuBar()
         helpMenu = menubar.addMenu('Help')
         helpMenu.addAction(tutorialAct)
         optionsMenu = menubar.addMenu('Options')
         optionsMenu.addAction(userNameAct)
+        optionsMenu.addAction(newServerAct)
         self.show()
 
     def createHomePanel(self):
@@ -74,6 +79,22 @@ class Clairxo(QMainWindow):
     def refresh(self):
         if self.mainwindow:
             self.mainwindow.refresh()
+
+    def setServerPath(self):
+        #Attempt to search for a new folder location. If this is canceled or otherwise fails
+        #then we should just go back to where we were.
+        self.statusbar.showMessage('Not ready yet')
+        return
+        d = QFileDialog()
+        d.setFileMode(2)
+        d.setViewMode(0)
+        d.setDirectory(os.getcwd())
+        if(d.exec()):
+            #If a folder was selected then the path should be the selected folder.
+            folderPath = d.selectedFiles()[0]
+            self.client.setServerPath(folderPath)
+            self.statusbar.showMessage('New Server: ' + folderPath)
+            self.refresh()
 
     def setUserName(self):
         self.statusbar.showMessage('Setting Username!')
