@@ -238,6 +238,7 @@ class GameTab(QWidget):
         self.client = client
         self.gamemodel = gamemodel
         self.statusbar = statusbar
+        self.yourTurn = self.gamemodel.getCurrentPlayer() == self.client.getUserName()
         self.gameMonitor = GameMonitor(self.client)
         self.gameMonitor.signals.notify.connect(self.reloadGame)
         self.gameMonitor.signals.getchat.connect(self.updateChat)
@@ -316,17 +317,18 @@ class GameTab(QWidget):
         self.refresh()
 
     def reloadGame(self, newgamemodel):
-        self.gamemodel = newgamemodel
-        for idx, row in enumerate(self.gamemodel.getCubes()):
-            for idy, gamecube in enumerate(row):
-                if gamecube is not None:
-                    self.cubes[idx][idy].setGameCube(self.gamemodel, gamecube)
-                    self.cubes[idx][idy].reset()
-        for square in self.squares:
-            square.setGameModel(self.gamemodel)
-            square.reset()
-        #self.pingUser()
-        self.refresh()
+        if not self.yourTurn:
+            self.gamemodel = newgamemodel
+            for idx, row in enumerate(self.gamemodel.getCubes()):
+                for idy, gamecube in enumerate(row):
+                    if gamecube is not None:
+                        self.cubes[idx][idy].setGameCube(self.gamemodel, gamecube)
+                        self.cubes[idx][idy].reset()
+            for square in self.squares:
+                square.setGameModel(self.gamemodel)
+                square.reset()
+            #self.pingUser()
+            self.refresh()
 
     def pingUser(self):
         msgWidget = QMessageBox()
@@ -370,14 +372,7 @@ class GameTab(QWidget):
         if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
             self.statusbar.showMessage('Your Turn!')
         else:
-            #If not
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
-            if not self.gameMonitor:
-                print('Creating game monitor')
-                self.gameMonitor = GameMonitor(self.client)
-                self.gameMonitor.signals.notify.connect(self.reloadGame)
-                self.gameMonitor.signals.getchat.connect(self.updateChat)
-                self.threadpool.start(self.gameMonitor)
         #Refresh the cubes displayed
         for row in self.cubes:
             for cube in row:
@@ -393,6 +388,7 @@ class GameTab(QWidget):
         print('refresh done')
 
     def passTurn(self):
+        self.yourTurn = False
         '''Should clear the squares of their cubes and move the turn'''
         self.passTurnBut.setEnabled(False)
         self.gamemodel.passTurn()
