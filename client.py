@@ -70,6 +70,9 @@ class Client():
     def checkUserName(self):
         return self.user
 
+    def removeCurrentGame(self):
+        self.config.removeCurrentGame()
+
     def setUserName(self, newname):
         self.goOffline()
         self.config.setName(newname)

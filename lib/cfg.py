@@ -44,7 +44,10 @@ class CFGFile():
         or to remove the game from this client'''
         if self.currentGame:
             if os.path.exists(self.currentGame):
-                os.remove(self.currentGame)
+                try:
+                    os.remove(self.currentGame)
+                except:
+                    pass
             mark = None
             for game, path in self.games.items():
                 if path == self.currentGame:
