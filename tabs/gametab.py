@@ -27,7 +27,6 @@ class GameMonitor(QRunnable):
     def run(self):
         self.working = True
         while self.working:
-            print('in this loop of game monitor')
             try:
                 with open(self.client.getCurrentGame(), 'rb') as gfile:
                     gamemodel = pickle.load(gfile)
@@ -314,10 +313,9 @@ class GameTab(QWidget):
         layout.addWidget(self.returnToMainBut,2, 1)
         self.setAcceptDrops(True)
         self.refresh()
-        print('init complete leaving')
 
     def sendMessage(self):
-        self.gamemodel.addMessage(self.sendWindow.toPlainText())
+        self.gamemodel.addMessage(self.client.getUserName(), self.sendWindow.toPlainText())
         self.sendWindow.setText('')
         self.refresh()
 
@@ -352,13 +350,19 @@ class GameTab(QWidget):
                 if cube:
                     cube.reset()
 
-    def refresh(self):
-        #If its your turn we can turn off the game monitor
-        username = self.client.getUserName()
-        winner = self.gamemodel.gameOver()
+    def updateChat(self, newchat):
         self.chatWindow.setText(self.gamemodel.getChat())
         self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
-        print('in refresh')
+
+    def refresh(self):
+        '''Tests whether the user is the current player or not
+        if the player is the current player refresh only updates the chat
+        otherwise if there isnt already a game monitor spawns a new one
+        and waits for the game to progress'''
+        print('Refreshing')
+        username = self.client.getUserName()
+        winner = self.gamemodel.gameOver()
+        #If there is a winner the game is over and we should exit
         if winner:
             if winner == username:
                 self.winCondition(True)
@@ -366,23 +370,28 @@ class GameTab(QWidget):
                 self.winCondition(False, True)
             else:
                 self.winCondition(False)
+        #If you're the current player
         if self.client.getUserName() == self.gamemodel.getCurrentPlayer():
             self.statusbar.showMessage('Your Turn!')
         else:
+            #If not
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
-            print('Creating game monitor')
             if not self.gameMonitor:
+                print('Creating game monitor')
                 self.gameMonitor = GameMonitor(self.client)
                 self.gameMonitor.signals.notify.connect(self.reloadGame)
-                self.gameMonitor.signals.getchat.connect(self.refresh)
+                self.gameMonitor.signals.getchat.connect(self.updateChat)
                 self.threadpool.start(self.gameMonitor)
-            print('finishing loop')
+        #Refresh the cubes displayed
         for row in self.cubes:
             for cube in row:
                 if cube:
                     cube.refresh()
         for square in self.squares:
             square.refresh()
+        #Update the chat window
+        self.chatWindow.setText(self.gamemodel.getChat())
+        self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
         print('refresh done')
 
     def passTurn(self):
@@ -397,9 +406,6 @@ class GameTab(QWidget):
                 if cube:
                     cube.reset()
         self.refresh()
-        self.gameMonitor = GameMonitor(self.client)
-        self.gameMonitor.signals.notify.connect(self.reloadGame)
-        self.threadpool.start(self.gameMonitor)
         
     def pickedUp(self, gamecube):
         dropPoints = self.gamemodel.updateDrops(gamecube)
