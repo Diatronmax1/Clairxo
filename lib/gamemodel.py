@@ -64,8 +64,8 @@ class GameModel():
         self.chatText = ''
         self.save()
 
-    def addMessage(self, newmessage):
-        msg = '-'+ self.currentPlayer
+    def addMessage(self, player, newmessage):
+        msg = '-'+ player
         msg += newmessage + '\n\n'
         self.chatText += msg
         self.save()
