@@ -212,12 +212,12 @@ class HomeScreen(QWidget):
         self.statusbar.showMessage('Loading games ')
         if self.client.getUserName():
             self.gameSelect = GameQuery(self.client)
-            self.gameSelect.exec_()
-            game = self.client.getCurrentGame()
-            if game:
-                self.statusbar.showMessage('Current game: ' + game)
-                self.resumeGame()
-            else:
-                self.statusbar.showMessage('No current games')
+            if self.gameSelect.exec_():
+                game = self.client.getCurrentGame()
+                if game:
+                    self.statusbar.showMessage('Current game: ' + game)
+                    self.resumeGame()
+                else:
+                    self.statusbar.showMessage('No current games')
         else:
             self.statusbar.showMessage('Set up username first!')

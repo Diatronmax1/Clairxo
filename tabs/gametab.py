@@ -27,6 +27,7 @@ class GameMonitor(QRunnable):
     def run(self):
         self.working = True
         while self.working:
+            print('in this loop of game monitor')
             try:
                 with open(self.client.getCurrentGame(), 'rb') as gfile:
                     gamemodel = pickle.load(gfile)
@@ -38,8 +39,10 @@ class GameMonitor(QRunnable):
             except:
                 pass
             time.sleep(1)
+        print('leaving game monitor')
 
     def end(self):
+        print('ending game monitor')
         self.working = False
 
 class SquareWidget(QPushButton):
@@ -311,6 +314,7 @@ class GameTab(QWidget):
         layout.addWidget(self.returnToMainBut,2, 1)
         self.setAcceptDrops(True)
         self.refresh()
+        print('init complete leaving')
 
     def sendMessage(self):
         self.gamemodel.addMessage(self.sendWindow.toPlainText())
@@ -354,6 +358,7 @@ class GameTab(QWidget):
         winner = self.gamemodel.gameOver()
         self.chatWindow.setText(self.gamemodel.getChat())
         self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
+        print('in refresh')
         if winner:
             if winner == username:
                 self.winCondition(True)
@@ -365,16 +370,20 @@ class GameTab(QWidget):
             self.statusbar.showMessage('Your Turn!')
         else:
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
-            self.gameMonitor = GameMonitor(self.client)
-            self.gameMonitor.signals.notify.connect(self.reloadGame)
-            self.gameMonitor.signals.getchat.connect(self.refresh)
-            self.threadpool.start(self.gameMonitor)
+            print('Creating game monitor')
+            if not self.gameMonitor:
+                self.gameMonitor = GameMonitor(self.client)
+                self.gameMonitor.signals.notify.connect(self.reloadGame)
+                self.gameMonitor.signals.getchat.connect(self.refresh)
+                self.threadpool.start(self.gameMonitor)
+            print('finishing loop')
         for row in self.cubes:
             for cube in row:
                 if cube:
                     cube.refresh()
         for square in self.squares:
             square.refresh()
+        print('refresh done')
 
     def passTurn(self):
         '''Should clear the squares of their cubes and move the turn'''
@@ -443,6 +452,8 @@ class GameTab(QWidget):
         self.signals.finished.emit()
 
     def returnToMain(self):
+        print('killing monitor')
         if self.gameMonitor:
+            print('monitor killed')
             self.gameMonitor.end()
         self.signals.finished.emit()

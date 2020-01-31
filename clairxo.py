@@ -140,13 +140,27 @@ class Clairxo(QMainWindow):
     def loadGame(self):
         currentGame = self.client.getCurrentGame()
         if os.path.exists(currentGame):
-            with open(currentGame, 'rb') as gfile:
-                self.gamemodel = pickle.load(gfile)
-                self.gameWidget = GameTab(self.client, self.gamemodel, self.statusbar)
-                self.gameWidget.signals.finished.connect(self.returnToMain)
-                self.setCentralWidget(self.gameWidget)
-                self.mainwindow = None
-                self.monitor.end()
+            tries = 4
+            #Give this a few attempts in case the other client is accessing it
+            while tries > 0:
+                #try:
+                if True:
+                    print('trying to open game')
+                    with open(currentGame, 'rb') as gfile:
+                        self.gamemodel = pickle.load(gfile)
+                        self.gameWidget = GameTab(self.client, self.gamemodel, self.statusbar)
+                        print('returned from making game tab')
+                        self.gameWidget.signals.finished.connect(self.returnToMain)
+                        print('setting central widget')
+                        self.setCentralWidget(self.gameWidget)
+                        self.mainwindow = None
+                        print('disabling monitor')
+                        self.monitor.end()
+                        tries = 0
+                #except:
+                #    print('Trying again')
+                #    tries -= 1
+                #    time.sleep(0.5)
         else:
             self.client.removeCurrentGame()
             self.statusbar.showMessage('Game has been deleted or moved')
