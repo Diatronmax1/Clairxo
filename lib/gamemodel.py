@@ -70,6 +70,10 @@ class GameModel():
         self.chatText += msg
         self.save()
 
+    def setChat(self, chat):
+        self.chatText = chat
+        self.save()
+
     def getChat(self):
         return self.chatText
 
