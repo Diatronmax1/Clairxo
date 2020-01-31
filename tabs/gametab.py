@@ -240,7 +240,10 @@ class GameTab(QWidget):
         self.client = client
         self.gamemodel = gamemodel
         self.statusbar = statusbar
-        self.gameMonitor = None
+        self.gameMonitor = GameMonitor(self.client)
+        self.gameMonitor.signals.notify.connect(self.reloadGame)
+        self.gameMonitor.signals.getchat.connect(self.updateChat)
+        self.threadpool.start(self.gameMonitor)
         player1 = QLabel(self.gamemodel.getPlayerOne()[:-1])
         player1.setAlignment(Qt.AlignCenter)
         vslabel = QLabel('vs')
@@ -385,6 +388,8 @@ class GameTab(QWidget):
         for square in self.squares:
             square.refresh()
         #Update the chat window
+        self.chatWindow.setText(self.gamemodel.getChat())
+        self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
         self.chatWindow.setText(self.gamemodel.getChat())
         self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
         print('refresh done')

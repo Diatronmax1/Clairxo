@@ -96,6 +96,7 @@ class CFGFile():
             if mark:
                 self.games.pop(mark)
             self.currentGame = None
+        self.save()
 
     def getGames(self):
         return self.games
@@ -104,6 +105,7 @@ class CFGFile():
         self.currentGame = None
         if gamename in self.games:
             self.currentGame = self.games[gamename]
+        self.save()
         return self.currentGame
 
     def getCurrentGame(self):
