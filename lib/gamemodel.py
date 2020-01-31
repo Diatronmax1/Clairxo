@@ -61,7 +61,17 @@ class GameModel():
         self.droppedPoint = None
         self.pickedUpCube = None
         self.gameover = False
+        self.chatText = ''
         self.save()
+
+    def addMessage(self, newmessage):
+        msg = '-'+ self.currentPlayer
+        msg += newmessage + '\n\n'
+        self.chatText += msg
+        self.save()
+
+    def getChat(self):
+        return self.chatText
 
     def getFileName(self):
         return self.filename

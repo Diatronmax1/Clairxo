@@ -76,6 +76,7 @@ class CFGFile():
 
     def setCurrentGame(self, filename, gamepath):
         self.currentGame = gamepath
+        print('setting current game ' + filename)
         self.games[filename] = self.currentGame
         self.save()
 

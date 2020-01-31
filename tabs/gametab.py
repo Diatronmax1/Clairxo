@@ -10,6 +10,7 @@ import pickle
 class WorkerSignals(QObject):
     finished = pyqtSignal()
     notify = pyqtSignal(object)
+    getchat = pyqtSignal(str)
 
 class ButtonSignals(QObject):
     pickedUp = pyqtSignal(object)
@@ -32,6 +33,8 @@ class GameMonitor(QRunnable):
                     if gamemodel.getCurrentPlayer() == self.client.getUserName():
                         self.signals.notify.emit(gamemodel)
                         self.working = False
+                    else:
+                        self.signals.getchat.emit(gamemodel.getChat())
             except:
                 pass
             time.sleep(1)
@@ -250,8 +253,24 @@ class GameTab(QWidget):
         self.passTurnBut = QPushButton('Accept and Pass Turn')
         self.passTurnBut.setEnabled(False)
         self.passTurnBut.clicked.connect(self.passTurn)
-        self.endgamebut = QPushButton('End Game')
-        self.endgamebut.clicked.connect(self.endGame)
+        self.returnToMainBut = QPushButton('Return To Main')
+        self.returnToMainBut.clicked.connect(self.returnToMain)
+        #Chat and button window
+        self.chatWindow = QTextEdit()
+        self.chatWindow.setReadOnly(True)
+        self.sendWindow = QTextEdit()
+        self.sendMessageBut = QPushButton('Send')
+        self.sendMessageBut.clicked.connect(self.sendMessage)
+        msgArea = QWidget()
+        layout = QVBoxLayout(msgArea)
+        layout.setStretch(0, 0)
+        layout.setStretch(1, 8)
+        layout.setStretch(2, 0)
+        layout.setStretch(3, 0)
+        layout.addWidget(QLabel('Chat'))
+        layout.addWidget(self.chatWindow)
+        layout.addWidget(self.sendWindow)
+        layout.addWidget(self.sendMessageBut)
         #Development
         gameArea = QWidget()
         layout = QGridLayout(gameArea)
@@ -283,16 +302,19 @@ class GameTab(QWidget):
                         newSquare.signals.pickedUp.connect(self.pickedUp)
                         self.squares.append(newSquare)
                         layout.addWidget(newSquare, idx, idy)
-        layout = QVBoxLayout(self)
-        layout.setStretch(0, 0)
-        layout.setStretch(1, 2)
-        layout.setStretch(2, 0)
-        layout.setStretch(3, 0)
-        layout.addWidget(vsbox)
-        layout.addWidget(gameArea)
-        layout.addWidget(self.passTurnBut)
-        layout.addWidget(self.endgamebut)
+        layout = QGridLayout(self)
+        layout.setRowStretch(1, 2)
+        layout.addWidget(vsbox,               0, 0)
+        layout.addWidget(gameArea,            1, 0)
+        layout.addWidget(msgArea,             1, 1)
+        layout.addWidget(self.passTurnBut,    2, 0)
+        layout.addWidget(self.returnToMainBut,2, 1)
         self.setAcceptDrops(True)
+        self.refresh()
+
+    def sendMessage(self):
+        self.gamemodel.addMessage(self.sendWindow.toPlainText())
+        self.sendWindow.setText('')
         self.refresh()
 
     def reloadGame(self, newgamemodel):
@@ -330,6 +352,8 @@ class GameTab(QWidget):
         #If its your turn we can turn off the game monitor
         username = self.client.getUserName()
         winner = self.gamemodel.gameOver()
+        self.chatWindow.setText(self.gamemodel.getChat())
+        self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
         if winner:
             if winner == username:
                 self.winCondition(True)
@@ -343,6 +367,7 @@ class GameTab(QWidget):
             self.statusbar.showMessage(self.gamemodel.getCurrentPlayer() + '\'s turn')
             self.gameMonitor = GameMonitor(self.client)
             self.gameMonitor.signals.notify.connect(self.reloadGame)
+            self.gameMonitor.signals.getchat.connect(self.refresh)
             self.threadpool.start(self.gameMonitor)
         for row in self.cubes:
             for cube in row:
@@ -415,4 +440,9 @@ class GameTab(QWidget):
         #Delete the game from the server and set it 
         #to no current game
         self.client.removeCurrentGame()
+        self.signals.finished.emit()
+
+    def returnToMain(self):
+        if self.gameMonitor:
+            self.gameMonitor.end()
         self.signals.finished.emit()

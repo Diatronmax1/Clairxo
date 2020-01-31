@@ -64,6 +64,12 @@ class Client():
             for invite in invites:
                 tfile.write(invite)
 
+    def createInvite(self, filename, savefile):
+        tp = self.config.getTransferPath()
+        self.config.setCurrentGame(filename, savefile)
+        with open(tp, 'a+') as tfile:
+            tfile.write(self.playerTarget[:-1] + '-' + savefile + '\n')
+
     def getCurrentGame(self):
         return self.config.getCurrentGame()
 
@@ -106,12 +112,6 @@ class Client():
 
     def getPlayerTarget(self):
         return self.playerTarget
-
-    def createInvite(self, filename, savefile):
-        tp = self.config.getTransferPath()
-        self.config.setCurrentGame(filename, savefile)
-        with open(tp, 'a+') as tfile:
-            tfile.write(self.playerTarget[:-1] + '-' + savefile + '\n')
 
     def goOffline(self):
         print('Going offline')
@@ -167,5 +167,4 @@ class Client():
         cg = self.config.getCurrentGame()
         if cg:
             if not os.path.exists(cg):
-                print('No current game path')
                 self.config.removeCurrentGame()

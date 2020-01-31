@@ -42,7 +42,7 @@ class Clairxo(QMainWindow):
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
         self.setWindowTitle('CLAIRXO')
-        self.setGeometry(625, 100, 650, 725)
+        self.setGeometry(625, 100, 800, 750)
         self.startMonitor()
         #Set up action bar
         tutorialAct = QAction('Tutorial', self)
