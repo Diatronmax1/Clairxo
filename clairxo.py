@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 #Author Chris Lambert
 from PyQt5.QtCore import Qt, QMimeData, pyqtSignal, QObject, QThreadPool, QRunnable
-from PyQt5.QtWidgets import (QMainWindow, QAction, QApplication, qApp, QLabel, QFileDialog,
-                             QTabWidget, QWidget, QMessageBox, QVBoxLayout, QListWidget, QDialog, QPushButton)
+from PyQt5.QtWidgets import (QMainWindow, QAction, QApplication, qApp, QLabel, QFileDialog, QLineEdit,
+                             QTabWidget, QWidget, QMessageBox, QVBoxLayout, QListWidget, QInputDialog, QPushButton)
 import sys
 from client import Client
 from lib.gamemodel import GameModel
@@ -36,6 +36,7 @@ class Clairxo(QMainWindow):
         super().__init__()
         self.threadpool = QThreadPool()
         self.client = Client()
+        self.statusbar = self.statusBar()
         #Set up remaining animations
         self.createHomePanel()
         self.setCentralWidget(self.mainwindow)
@@ -45,15 +46,21 @@ class Clairxo(QMainWindow):
         #Set up action bar
         tutorialAct = QAction('Tutorial', self)
         tutorialAct.setStatusTip('Launch Tutorial Mode for this program')
-        tutorialAct.setShortcut('Ctrl+t')
         tutorialAct.triggered.connect(self.launchTutorial)
+        #Options
+        userNameAct = QAction('Set User Name', self)
+        userNameAct.setStatusTip('Sets the username for this isntance')
+        userNameAct.triggered.connect(self.setUserName)
+        #Menu bar
         menubar = self.menuBar()
         helpMenu = menubar.addMenu('Help')
         helpMenu.addAction(tutorialAct)
+        optionsMenu = menubar.addMenu('Options')
+        optionsMenu.addAction(userNameAct)
         self.show()
 
     def createHomePanel(self):
-        self.mainwindow = HomeScreen(self.client, self.statusBar())
+        self.mainwindow = HomeScreen(self.client, self.statusbar)
         self.mainwindow.signals.newGame.connect(self.newGame)
         self.mainwindow.signals.loadGame.connect(self.loadGame)
 
@@ -66,6 +73,14 @@ class Clairxo(QMainWindow):
     def refresh(self):
         if self.mainwindow:
             self.mainwindow.refresh()
+
+    def setUserName(self):
+        self.statusbar.showMessage('Setting Username!')
+        text, _ok = QInputDialog.getText(self, "Set new User Name", "User name:", QLineEdit.Normal)
+        if text and _ok:
+            self.statusbar.showMessage('Set user name to: ' + text)
+            self.client.setUserName(text)
+            self.refresh()
 
     def launchTutorial(self):
         msgWidget = QMessageBox()
@@ -91,9 +106,9 @@ class Clairxo(QMainWindow):
         '''
         self.monitor.end()
         print('Starting a game with ' + player)
-        self.gamemodel = GameModel(self.client, self.client.getUserName(), player)
-        self.client.createInvite(self.gamemodel.getSaveFile())
-        self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
+        self.gamemodel = GameModel(self.client.getGamePath(), self.client.getUserName(), player)
+        self.client.createInvite(self.gamemodel.getFileName(), self.gamemodel.getSaveFile())
+        self.gameWidget = GameTab(self.client, self.gamemodel, self.statusbar)
         self.gameWidget.signals.finished.connect(self.returnToMain)
         self.setCentralWidget(self.gameWidget)
         #Now that the main widget has been reset all panel items
@@ -104,7 +119,7 @@ class Clairxo(QMainWindow):
         currentGame = self.client.getCurrentGame()
         with open(currentGame, 'rb') as gfile:
             self.gamemodel = pickle.load(gfile)
-            self.gameWidget = GameTab(self.client, self.gamemodel, self.statusBar())
+            self.gameWidget = GameTab(self.client, self.gamemodel, self.statusbar)
             self.gameWidget.signals.finished.connect(self.returnToMain)
             self.setCentralWidget(self.gameWidget)
             self.mainwindow = None
@@ -118,7 +133,7 @@ class Clairxo(QMainWindow):
         #Delete all the old game information
         self.gamemodel = None
         self.gameWidget.signals.finished.disconnect()
-        self.statusBar().showMessage('Main Menu')
+        self.statusbar.showMessage('Main Menu')
   
 if __name__ == '__main__':
     app = QApplication(sys.argv)

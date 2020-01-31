@@ -27,6 +27,7 @@ class Client():
             try:
                 with open(self.cfgfile, 'rb') as cfile:
                     self.config = pickle.load(cfile)
+                    self.config.integrityCheck()
             except:
                 #If this failes make a new config file
                 #Config saves automatically on creation
@@ -41,6 +42,12 @@ class Client():
 
     def getInvites(self):
         return self.invites
+
+    def getGames(self):
+        return self.config.getGames()
+
+    def setCurrentGame(self, gamename):
+        self.config.getGame(gamename)
 
     def acceptInvite(self, invite):
         newgamepath = self.invites.pop(invite)
@@ -94,9 +101,9 @@ class Client():
     def getPlayerTarget(self):
         return self.playerTarget
 
-    def createInvite(self, savefile):
+    def createInvite(self, filename, savefile):
         tp = self.config.getTransferPath()
-        self.config.setCurrentGame(savefile)
+        self.config.setCurrentGame(filename, savefile)
         with open(tp, 'a+') as tfile:
             tfile.write(self.playerTarget[:-1] + '-' + savefile + '\n')
 
@@ -123,7 +130,6 @@ class Client():
         sp = self.config.getServerPath()
         name = self.config.getName()
         if name == '':
-            print('No username set yet')
             return
         if os.path.exists(sp):
             players = []

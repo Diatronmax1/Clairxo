@@ -40,15 +40,12 @@ class Cube():
         return str(self.x) + ', ' + str(self.y) + ' State: ' +  str(self.state)
 
 class GameModel():
-    def __init__(self, client, player1, player2):
+    def __init__(self, gamepath, player1, player2):
         self.players = [player1, player2]
         self.currentPlayer = self.players[0]
-        self.client = client
+        self.gamePath = gamepath
         time = dt.datetime.now()
         self.filename = time.strftime("%d%m%Y") + self.players[0][:-1] + self.players[1][:-1]
-        #Starting configuration is a 5x5 grid of cubes all incremented by 1
-        #so that top left is (1, 1), top right is (1, 6), bot left is (6, 1)
-        #and bot right is (6, 6)
         self.maxwidth = 5
         self.cubes = np.ndarray(shape=(self.maxwidth+2,self.maxwidth+2), dtype=object)
         for row in range(1, self.maxwidth+1):
@@ -65,6 +62,15 @@ class GameModel():
         self.pickedUpCube = None
         self.gameover = False
         self.save()
+
+    def getFileName(self):
+        return self.filename
+
+    def getCubes(self):
+        return self.cubes
+
+    def getSaveFile(self):
+        return os.path.join(self.gamePath, self.filename + '.gtp')
 
     def getPlayerOne(self):
         return self.players[0]
@@ -101,6 +107,20 @@ class GameModel():
 
     def getDroppedPoint(self):
         return self.droppedPoint
+
+    def cancelPickedUp(self):
+        self.pickedUpCube.revertState()
+        self.pickedUpCube = None
+        self.droppedPoint = None
+
+    def save(self):
+        '''Saves in the game folder'''
+        savefile = os.path.join(self.gamePath, self.filename)
+        with open(savefile + '.gtp', 'wb') as gfile:
+            pickle.dump(self, gfile)
+
+    def getPickedUpCube(self):
+        return self.pickedUpCube
 
     def passTurn(self):
         #Move the dropped block into the grid shifting all of the cubes.
@@ -250,28 +270,6 @@ class GameModel():
                 return self.players[1]
             else:
                 return None
-
-
-    def getCubes(self):
-        return self.cubes
-
-    def getSaveFile(self):
-        return os.path.join(self.client.getGamePath(), self.filename + '.gtp')
-
-    def save(self):
-        '''Saves in the game folder'''
-        gamefolder = self.client.getGamePath()
-        savefile = os.path.join(gamefolder, self.filename)
-        with open(savefile + '.gtp', 'wb') as gfile:
-            pickle.dump(self, gfile)
-
-    def cancelPickedUp(self):
-        self.pickedUpCube.revertState()
-        self.pickedUpCube = None
-        self.droppedPoint = None
-
-    def getPickedUpCube(self):
-        return self.pickedUpCube
 
     def updateDrops(self, gamecube):
         """Selects the valid points on a 7x7 grid that are valid entries based on

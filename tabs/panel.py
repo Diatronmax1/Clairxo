@@ -73,20 +73,43 @@ class InviteQuery(QDialog):
         else:
             self.msgBar.setText('Select a invite first!')
 
+class GameQuery(QDialog):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
+        self.acceptBut = QPushButton('Accept')
+        self.acceptBut.clicked.connect(self.testAccept)
+        self.cancelBut = QPushButton('Cancel')
+        self.cancelBut.clicked.connect(self.reject)
+        self.gameList = QListWidget()
+        self.msgBar = QLabel('')
+        self.gameList.addItems(self.client.getGames())
+        self.gameList.itemClicked.connect(self.setInviteTarget)
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel('Select a game'))
+        layout.addWidget(self.gameList)
+        layout.addWidget(self.acceptBut)
+        layout.addWidget(self.cancelBut)
+        layout.addWidget(self.msgBar)
+        self.game = ''
+
+    def setInviteTarget(self, state):
+        self.game = state.text()
+
+    def testAccept(self):
+        if self.game:
+            self.client.setCurrentGame(self.game)
+            self.accept()
+        else:
+            self.msgBar.setText('Select a game first!')
+
 class HomeScreen(QWidget):
     def __init__(self, client, statusbar):
         super().__init__()
         self.signals = WorkerSignals()
-        #Client comes in loaded with a config
         self.client = client
         self.statusbar = statusbar
-        background = 'lib/images/background.jpg'
-        self.image = QPixmap(background)
-        self.setAutoFillBackground(True)
-        newmap = self.image.scaled(self.width(), self.height())
-        p = self.palette()
-        p.setBrush(self.backgroundRole(), QBrush(newmap))
-        self.setPalette(p)
+        self.setBackground()
         label = QLabel('Current User: ')
         label.setStyleSheet('background-color:white')
         self.userName = QLabel()
@@ -103,15 +126,12 @@ class HomeScreen(QWidget):
         startNewBut = QPushButton('Start New Game')
         startNewBut.clicked.connect(self.startNewGame)
         resumeBut = QPushButton('Resume Game')
-        resumeBut.clicked.connect(self.loadGame)
+        resumeBut.clicked.connect(self.resumeGame)
+        loadGameBut = QPushButton('Load Game')
+        loadGameBut.clicked.connect(self.loadGame)
         invites = self.client.getInvites()
-        if invites:
-            self.inviteBut = QPushButton('Invites Available!')
-        else:
-            self.inviteBut = QPushButton('No invites :(')
+        self.inviteBut = QPushButton('No invites :(')
         self.inviteBut.clicked.connect(self.viewInvites)
-        optionsBut = QPushButton('Options')
-        optionsBut.clicked.connect(self.setOptions)
         self.playerList = QListWidget()
         layout = QGridLayout(self)
         layout.setRowStretch(0, 2)
@@ -122,17 +142,27 @@ class HomeScreen(QWidget):
         layout.addWidget(userBox,                       1, 1)
         layout.addWidget(startNewBut,                   2, 1)
         layout.addWidget(resumeBut,                     3, 1)
-        layout.addWidget(self.inviteBut,                4, 1)
-        layout.addWidget(optionsBut,                    5, 1)
+        layout.addWidget(loadGameBut,                   4, 1)
+        layout.addWidget(self.inviteBut,                5, 1)
         label = QLabel('Online Players')
         label.setStyleSheet('background-color:white')
         layout.addWidget(label,                         6, 1)
         layout.addWidget(self.playerList,               7, 1)
         layout.addWidget(QLabel('\t'),                  8, 0, 1, 3)
+
+    def setBackground(self):
+        background = 'lib/images/background.jpg'
+        self.image = QPixmap(background)
+        self.setAutoFillBackground(True)
+        newmap = self.image.scaled(self.width(), self.height())
+        p = self.palette()
+        p.setBrush(self.backgroundRole(), QBrush(newmap))
+        self.setPalette(p)
         
     def refresh(self):
         self.client.connect()
         self.playerList.clear()
+        self.userName.setText(self.client.getUserName()[:-1])
         players = self.client.getOnlinePlayers()
         for player in players:
             self.playerList.addItem(player[:-1])
@@ -170,20 +200,22 @@ class HomeScreen(QWidget):
         else:
             self.statusbar.showMessage('Setup username first!')
 
-    def loadGame(self):
+    def resumeGame(self):
         if self.client.getCurrentGame():
             self.statusbar.showMessage('Loading game from server')
             self.signals.loadGame.emit()
         else:
             self.statusbar.showMessage('No games currently in play, start a new one!')
 
-    def setOptions(self):
-        self.statusbar.showMessage('Setting Options!')
-        text, _ok = QInputDialog.getText(self, "Set new User Name", "User name:", QLineEdit.Normal)
-        if text and _ok:
-            self.statusbar.showMessage('Set user name to: ' + text)
-            self.userName.setText(text)
-            self.client.setUserName(text)
-            self.refresh()
-
-
+    def loadGame(self):
+        self.statusbar.showMessage('Loading games ')
+        if self.client.getUserName():
+            self.gameSelect = GameQuery(self.client)
+            self.gameSelect.exec_()
+            game = self.client.getCurrentGame()
+            if game:
+                self.statusbar.showMessage('Current game: ' + game)
+            else:
+                self.statusbar.showMessage('No current games')
+        else:
+            self.statusbar.showMessage('Set up username first!')
