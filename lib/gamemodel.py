@@ -76,9 +76,6 @@ class GameModel():
     def getFileName(self):
         return self.filename
 
-    def removeCurrentGame(self):
-        self.config.removeCurrentGame()
-
     def getCubes(self):
         return self.cubes
 
@@ -103,26 +100,17 @@ class GameModel():
     def getDropPoints(self):
         return self.dropPoints
 
-    def reset(self):
-        #Clear the cubes
-        for row in self.cubes:
-            for cube in row:
-                if cube:
-                    cube.clear()
-        self.state = self.states[0]
-        self.droppedPoint = None
-        self.pickedUpCube = None
-        self.turnCount = 0
-        self.save()
-
-    def setQueueDrop(self, x, y):
-        self.droppedPoint = (x, y)
-
-    def rejectDrop(self):
-        self.droppedPoint = None
+    def removeCurrentGame(self):
+        self.config.removeCurrentGame()
 
     def getDroppedPoint(self):
         return self.droppedPoint
+
+    def setDroppedPoint(self, x, y):
+        self.droppedPoint = (x, y)
+
+    def getPickedUpCube(self):
+        return self.pickedUpCube
 
     def cancelPickedUp(self):
         self.pickedUpCube.revertState()
@@ -134,9 +122,6 @@ class GameModel():
         savefile = os.path.join(self.gamePath, self.filename)
         with open(savefile + '.gtp', 'wb') as gfile:
             pickle.dump(self, gfile)
-
-    def getPickedUpCube(self):
-        return self.pickedUpCube
 
     def passTurn(self):
         #Move the dropped block into the grid shifting all of the cubes.

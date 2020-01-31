@@ -312,12 +312,18 @@ class GameTab(QWidget):
         self.refresh()
 
     def sendMessage(self):
+        print('Sending Message')
         self.gamemodel.addMessage(self.client.getUserName(), self.sendWindow.text())
         self.sendWindow.setText('')
-        self.refresh()
+
+    def updateChat(self, newchat):
+        print('Refreshing Chat')
+        self.chatWindow.setText(self.gamemodel.getChat())
+        self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
 
     def reloadGame(self, newgamemodel):
         if not self.yourTurn:
+            print('Reloading Game for your turn')
             self.gamemodel = newgamemodel
             for idx, row in enumerate(self.gamemodel.getCubes()):
                 for idy, gamecube in enumerate(row):
@@ -327,31 +333,8 @@ class GameTab(QWidget):
             for square in self.squares:
                 square.setGameModel(self.gamemodel)
                 square.reset()
-            #self.pingUser()
             self.refresh()
-
-    def pingUser(self):
-        msgWidget = QMessageBox()
-        msgWidget.setIcon(QMessageBox.Critical)
-        msg = 'Your move!'
-        msgWidget.setText(msg)
-        msgWidget.setWindowTitle('Alert')
-        msgWidget.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        msgWidget.exec_()
-
-    def reset(self):
-        self.gamemodel.reset()
-        for square in self.squares:
-            square.reset()
-        for row in self.cubes:
-            for cube in row:
-                if cube:
-                    cube.reset()
-
-    def updateChat(self, newchat):
-        self.chatWindow.setText(self.gamemodel.getChat())
-        self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
-
+    
     def refresh(self):
         '''Tests whether the user is the current player or not
         if the player is the current player refresh only updates the chat
@@ -380,11 +363,6 @@ class GameTab(QWidget):
                     cube.refresh()
         for square in self.squares:
             square.refresh()
-        #Update the chat window
-        self.chatWindow.setText(self.gamemodel.getChat())
-        self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
-        self.chatWindow.setText(self.gamemodel.getChat())
-        self.chatWindow.verticalScrollBar().setValue(self.chatWindow.verticalScrollBar().maximum())
         print('refresh done')
 
     def passTurn(self):
@@ -392,7 +370,6 @@ class GameTab(QWidget):
         '''Should clear the squares of their cubes and move the turn'''
         self.passTurnBut.setEnabled(False)
         self.gamemodel.passTurn()
-        #Spawn the monitor
         for square in self.squares:
             square.reset()
         for row in self.cubes:
@@ -425,7 +402,7 @@ class GameTab(QWidget):
     def queueDrop(self, x, y):
         '''Alert the game model that a square now has a valid
         dropped cube'''
-        self.gamemodel.setQueueDrop(x, y)
+        self.gamemodel.setDroppedPoint(x, y)
         self.passTurnBut.setEnabled(True)
 
     def winCondition(self, won=True, tie=False):
@@ -439,7 +416,7 @@ class GameTab(QWidget):
             msg = 'You Tied!'
         msgWidget.setText(msg)
         msgWidget.setWindowTitle('Alert')
-        msgWidget.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgWidget.setStandardButtons(QMessageBox.Ok)
         msgWidget.exec_()
         self.endGame()
 
@@ -453,9 +430,7 @@ class GameTab(QWidget):
         self.signals.finished.emit()
 
     def returnToMain(self):
-        print('killing monitor')
         if self.gameMonitor:
-            print('monitor killed')
             self.gameMonitor.end()
             self.gameMonitor = None
         self.signals.finished.emit()
