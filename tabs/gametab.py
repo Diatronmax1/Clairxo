@@ -33,9 +33,7 @@ class GameMonitor(QRunnable):
                     gamemodel = pickle.load(gfile)
                     if gamemodel.getCurrentPlayer() == self.client.getUserName():
                         self.signals.notify.emit(gamemodel)
-                        self.working = False
-                    else:
-                        self.signals.getchat.emit(gamemodel.getChat())
+                    self.signals.getchat.emit(gamemodel.getChat())
             except:
                 pass
             time.sleep(1)
@@ -306,7 +304,7 @@ class GameTab(QWidget):
         layout.setRowStretch(1, 2)
         layout.addWidget(vsbox,               0, 0)
         layout.addWidget(gameArea,            1, 0)
-        layout.addWidget(msgArea,             1, 1)
+        layout.addWidget(msgArea,             0, 1, 2, 1)
         layout.addWidget(self.passTurnBut,    2, 0)
         layout.addWidget(self.returnToMainBut,2, 1)
         self.setAcceptDrops(True)
