@@ -218,7 +218,7 @@ class GameModel():
         #Check from column 1 through maxwidth
         for col in range(1, self.maxwidth+1):
             #Grab the first cube in the rows state
-            startCube = self.cubes[1][col].getState()
+            state = self.cubes[1][col].getState()
             #Verify the state is not None
             if state:
                 #Go through each column not including the first
